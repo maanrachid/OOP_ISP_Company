@@ -1,0 +1,1307 @@
+Script started on Fri Nov 02 17:33:33 2001
+haj@zeus:1:cat customerli  .cc
+/* this library will give a define to new class of type customer 
+   that will allow the client to set each member of this class 
+   alone or together by the function set .and also allow the clent to 
+   access the members by the get functions or by the get function 
+   to get all the data together.you also may write the data to a
+   file and read the data from a file by the wrie and read functions*/
+
+
+
+
+#include "customer.h"
+#define seperater '\n'     /* define a seperater
+			      between data in the file*/
+const int max =5;
+
+void Customer::set(){
+  setCustomerId();
+  setName();
+  setAddress();
+  setPhone();
+  setAccountdate();
+  setservice();
+}
+
+double Customer::calculateCharges(Date d1,Date d2){
+  serv->calculateCharges(d1,d2);
+
+}
+
+Customer& Customer::operator=(const Customer& cus){
+   id = cus.id;
+   name=cus.name;
+   address=cus.address;
+   phone=cus.phone;
+   accountdate=cus.accountdate;
+   serv=(*cus.serv).clone();
+   return *this;
+  
+
+}
+
+void Customer::setservice(){
+  ServiceFactory sf1;
+  serv=sf1.create();
+}
+
+Service* Customer::getservice()const{
+  return serv->clone();
+ 
+}
+
+Customer::Customer(const Customer& cus){
+  *this=cus;
+
+}
+
+
+void Customer::display(bool shortform) const{
+  cout<<"Id ,Name: "<<id<<", "<<name<<endl;
+  if (shortform==false){
+    cout<<"Address:  "<<address<<endl;
+    cout<<"Phone: "<<phone<<endl;
+  }
+  cout<<"Account Date:  ";
+  accountdate.display(0);
+  cout<<"\n";
+  serv->display();
+
+}
+
+void Customer::write(ofstream& f)const{
+  f<<id<<seperater<<name; 
+  f<<seperater;
+  f<<address<<seperater;
+  f<<phone<<seperater;
+  accountdate.write(f);
+  serv->write(f);
+
+}
+
+
+
+void Customer::read(ifstream& f){
+  int m;
+  ServiceFactory sf;
+
+  getline(f,id);
+  getline(f,name);
+  getline(f,address);
+  getline(f,phone);
+  accountdate.read(f);
+  f>>m;
+  serv=sf.create(m);
+  serv->read(f);
+}
+
+
+
+void Customer::setCustomerId(){
+  
+  string temp;
+  cout<<"Customer Id: ";
+  getline(cin,temp);
+  while((temp.length()!=max)){
+    cout<<"Customer Id must be exactly 5 letter : ";
+    getline(cin,temp);
+  }
+  id=temp;
+}
+string Customer::getCustomerId() const{
+  return id;
+}
+
+void Customer::setPhone(){
+  cout<<"Customer phone: ";
+  phone=setPhoneString();
+}
+
+
+string Customer::getPhone() const{
+  return phone;
+}
+
+
+
+void Customer::setName(){
+  string temp;
+  cout<<"Customer Name: ";
+  getline(cin,temp);
+  while(temp.length()<1 || temp.length()>(8*max)){
+    cout<<"Customer name must not be empty or more than 40 letters: ";
+    getline(cin,temp);
+  }
+  name=temp;
+
+
+
+}
+ 
+string Customer::getName() const{
+  return name;
+}
+
+void Customer::setAddress(){
+  cout<<"Customer Address: ";
+  address=setAddrString();
+  
+}
+
+string Customer::getAddress() const{
+  return address;
+}
+void Customer::setAccountdate(){
+  cout<<"Account Date: ";
+  accountdate.set();
+}
+
+Date Customer::getAccountdate() const{
+  return accountdate;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+haj@zeus:2:cat customerlist.cc
+#include "customerList.h"
+
+
+string CustomerList::findid(const string& info)const{
+  int n=info.length();
+  for(itr i = b.begin(); i != b.end(); ++i) {
+    if ((*i).second.getName().compare(info,0,n)==0){
+      cout<<"Name: "<< (*i).second.getName() <<'\t';
+      cout <<"ID: "<< (*i).second.getCustomerId()<<"? " ;
+      if (yes())
+	return (*i).second.getCustomerId();
+    }
+  }
+  return "not found";
+	  
+}
+
+Customer CustomerList::operator[](const string& str)const{
+
+  for(itr i = b.begin(); i != b.end(); ++i) {
+    if ((*i).second.getCustomerId()==str)
+      return (*i).second;
+  }
+ 
+
+}
+
+
+void CustomerList::set(){
+  Customer cs1;
+  do{
+    cs1.set();
+    cout<<"---------------\n";
+    insert(cs1);
+    cout<<"Another customer (Y/N)?";
+  }while(yes());
+}
+
+
+bool CustomerList::insert(const Customer& cus){
+  
+  string str1;
+  str1=cus.getCustomerId();
+   
+  
+  if (b.find(str1)==b.end()){
+    b.insert(val(str1,cus));
+    cout<<"Not in list yet ....\n";
+    b[str1].display(0);
+    cout<<"map size so far is: "<<b.size()<<endl;
+    return true;
+  }else {
+    cout<<"CustomerID "<<str1<<" is already in use:\n";
+    b[str1].display();
+    cout<<"OK to replace (Y/N)?";
+    if (yes()){
+      b[str1]=cus;
+      cout<<"map size so far is: "<<b.size()<<endl;
+      return true;
+    }else
+      return false; 
+  }
+  
+}
+
+
+
+void CustomerList::display(bool shortform,string str){
+  Customer cs1,i;
+  if (str=="ALL"){
+    for(itr i = b.begin(); i != b.end(); ++i) {
+      (*i).second.display(shortform);
+      cout<<"-----------------\n";
+    }
+  }else {
+    if (b.find(str)!=b.end()){  
+      cs1=b[str]; 
+      cs1.display(shortform);
+    }
+  }
+}
+
+
+void CustomerList::remove(string csId){
+  
+  b.erase(b.find(csId)); //b.erase(csId) doesnt work?
+}
+
+
+itr CustomerList::find(string csId)const{
+  return b.find(csId);
+}
+
+
+void CustomerList::read(ifstream& f){
+  Customer cs1;
+  int i;
+  int s;
+  string str; 
+  f>>s;
+  getline(f,str);
+
+  for(i=1;i<=s;i++) {
+    cs1.read(f);
+    b[cs1.getCustomerId()]=cs1;
+  }
+}
+
+
+void CustomerList::write(ofstream& f)const{
+  f<<b.size()<<seperater;
+  for(itr i = b.begin(); i != b.end(); ++i) {
+    (*i).second.write(f);
+  }    
+
+}
+
+bool CustomerList::isEmpty()const{
+  return b.empty();
+}
+
+
+bool CustomerList::isInList(Customer& cus){
+  for(itr i = b.begin(); i != b.end(); ++i) {
+    if ((*i).second.getCustomerId()==cus.getCustomerId())
+      return true;
+  }
+  return false;
+}
+
+
+bool CustomerList::isInList(const string& csId)const{
+  return b.count(csId);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+haj@zeus:3:cat transaction.h
+#ifndef _transaction_h
+#define _transaction_h
+#include "customerList.h"
+
+const int  TTCOUNT = 4;
+const char tab ='\t';
+const int MAXEXTRA =100;
+const int MINEXTRA=25;
+
+enum Ttype {monthusecharge,extrafee,latecharge,payment};
+
+class Transaction {
+ public:
+  Transaction(){}
+  Transaction(Ttype);
+  string  gettcustomerid()const;
+  Date  gettdate()const;
+  double gettamount()const;
+  Ttype getTType()const;
+  virtual void set(const CustomerList&);
+  virtual void display() const;
+  virtual void read(ifstream&);
+  virtual void write(ofstream&)const;
+  static void displayTTypes();
+  
+ protected:
+  virtual void setTransAmt(const CustomerList&)=0;
+  void setAmt(double);
+  void setttype(Ttype);
+
+ private:
+  string tcustomerid;
+  Date tdate;
+  Ttype type;
+  double tamount;
+  void settdate();
+  void settcustomerid(const CustomerList&);
+
+    
+
+};
+
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+haj@zeus:4:cat transaction.cc
+#include "transaction.h"
+
+
+
+void Transaction::displayTTypes(){
+  cout<<'0'<<tab<<"Monthly Use Charge\n";
+  cout<<'1'<<tab<<"Extra Service Fee\n";
+  cout<<'2'<<tab<<"Late Fee\n";
+  cout<<'3'<<tab<<"Payment\n";
+
+}
+
+
+Transaction::Transaction(Ttype t1){
+  setttype(t1);
+}
+
+void Transaction::setttype(Ttype t1){
+  type=t1;
+}
+
+string  Transaction::gettcustomerid()const{
+  return tcustomerid;
+}
+
+Date  Transaction::gettdate()const{
+  return tdate;
+}
+
+Ttype Transaction::getTType()const{
+  return type;
+}
+ 
+double Transaction::gettamount()const{
+  return tamount;
+}
+  
+
+void Transaction::set(const CustomerList& l1){
+  settcustomerid(l1);
+  settdate();
+  
+  
+}
+
+void  Transaction::display() const{
+  cout<<tcustomerid<<tab<<tdate<<tab;
+ 
+}
+
+void  Transaction:: read(ifstream& f){
+  f>>tcustomerid>>ws;
+  tdate.read(f);
+  
+}
+ 
+void  Transaction:: write(ofstream& f)const{
+  f<<tcustomerid<<endl;
+  tdate.write(f);
+}
+
+
+
+void  Transaction::setAmt(double d1){
+  tamount = d1;
+}
+
+
+
+void Transaction::settdate(){
+  cout<<"Enter the transaction date. \n";
+  tdate.set();
+}
+
+void Transaction::settcustomerid(const CustomerList& l1){
+  string str,strid;
+  int n;
+  cout<<"Enter the first few characters of the customer's name: ";
+  getline(cin,str);
+  strid=l1.findid(str);
+  while(strid=="not found"){
+    cout<<strid<<endl;
+    cout<<"Enter the first few characters of the customer's name: ";
+    getline(cin,str);
+    strid=l1.findid(str);
+  }
+  tcustomerid=strid;
+
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+haj@zeus:5:cat transMonthlyUse.h
+#ifndef _transMonthlyUse_h
+#define _transMonthlyUse_h
+#include "transaction.h"
+
+class TransMonthlyUse : public Transaction {
+ public:
+  TransMonthlyUse();
+  void set(const CustomerList&);
+  void display()const;
+  void write(ofstream&)const;
+  void read(ifstream&);
+  Date getstart()const;
+  Date getend()const;
+  
+
+
+
+
+ private:
+  Date start;
+  Date end;
+  void setTransAmt(const CustomerList&);
+  void setstart();
+  void setend();
+};
+
+
+
+
+#endif
+
+
+haj@zeus:6:cat transmonthlyuse.cc
+#include "transMonthlyUse.h"
+
+TransMonthlyUse::TransMonthlyUse(){
+  setttype(monthusecharge);
+}
+
+
+
+void TransMonthlyUse::set(const CustomerList& l1){
+  Transaction::set(l1);
+  setstart();
+  setend();
+  while (end<start){
+    cout<<"Start date must be earlier than end date. Please try again.\n";
+    setstart();
+    setend();
+  }
+  setTransAmt(l1);
+}
+
+void TransMonthlyUse::display()const{
+  Transaction::display();
+  cout<<"Monthly Use Charge\t";
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+  cout<<"Usage fee for period ";
+  start.display();
+  cout<<" - " ;
+  end.display();
+  cout<<": ";
+  moneyDisplay(Transaction::gettamount());
+  cout <<endl;
+  
+}
+
+void TransMonthlyUse::write(ofstream& f)const{
+
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+  start.write(f);
+  end.write(f);
+  
+}
+
+void TransMonthlyUse::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1;
+  Transaction::setAmt(d1);
+  start.read(f);
+  end.read(f);
+}
+
+Date TransMonthlyUse::getstart()const{
+  return start;
+}
+
+Date TransMonthlyUse::getend()const{
+  return end;
+}
+
+void TransMonthlyUse::setTransAmt(const CustomerList& l1){
+  setAmt(l1[Transaction::gettcustomerid()].calculateCharges(start,end));
+
+}
+
+void TransMonthlyUse::setstart(){
+  cout<<"Enter the start date of this billing period :";
+  start.set();
+}
+
+void TransMonthlyUse::setend(){
+
+  cout<<"Enter the end date for this billing period: ";
+  end.set();
+
+}
+
+
+
+
+
+haj@zeus:7:cat transExtrFee.h
+cat: cannot open transExtrFee.h
+haj@zeus:8:cat transExtraFee.cc  h
+#ifndef _transExtraFee_h
+#define _transExtraFee_h
+
+#include "transaction.h"
+
+class TransExtraFee : public Transaction {
+ public: 
+  TransExtraFee();
+  void set(const CustomerList&);
+  void read(ifstream&);
+  void write(ofstream&)const;
+  void display()const;
+  string getdescription()const;
+  Date getservicedate()const;
+  
+  
+ private:
+  Date servicedate;
+  string description;
+  void setservicedate();
+  void setdescription();
+  void setTransAmt(const CustomerList&);
+  
+};
+
+
+
+#endif
+
+
+
+haj@zeus:9:cat transextrafee.cc
+#include "transExtraFee.h"
+
+TransExtraFee::TransExtraFee(){
+  setttype(extrafee);
+
+}
+
+void TransExtraFee::set(const CustomerList& l1){
+  Transaction::set(l1);
+  setTransAmt(l1);
+  setservicedate();
+  setdescription();
+  
+}
+
+void TransExtraFee::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1;
+  Transaction::setAmt(d1);
+  servicedate.read(f);
+  f>>ws;
+  getline(f,description);
+  
+
+}
+void TransExtraFee::write(ofstream& f)const{
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+  servicedate.write(f);
+  f<<description<<endl;
+
+
+}
+void TransExtraFee::display()const{
+  Transaction::display();
+  cout<<"Extra Service Fee\t";
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+  cout<<"Service Date: ";
+  servicedate.display();
+  cout<<endl;
+  cout<<"Service Description: "<<description<<endl;
+  
+}
+string TransExtraFee::getdescription()const{
+  return description;
+
+}
+Date TransExtraFee::getservicedate()const{
+  return servicedate;
+
+}
+void TransExtraFee::setservicedate(){
+  cout<<"Enter the date of this extra service: ";
+  servicedate.set();
+}
+  
+void TransExtraFee::setdescription(){
+  cout <<"Enter a brief description of the service:";
+  getline(cin,description);
+
+}
+
+void TransExtraFee::setTransAmt(const CustomerList& l1){
+  double d1;
+  cout <<"Enter the charge for this extra service: ";
+  d1=setReal();
+  while((d1<MINEXTRA)||(d1>MAXEXTRA)){
+    cout<<"Charge must be between $"<<MINEXTRA
+	<<"and $"<<MAXEXTRA<<".please try again.\n";
+    d1=setReal();
+  }
+  setAmt(d1);
+
+}
+
+
+
+
+
+
+haj@zeus:10:cat transLAteFee.h        ateFee.h
+#ifndef _transLateFee_h
+#define _transLateFee_h
+#include "transaction.h"
+
+class TransLateFee : public Transaction {
+ public:
+  TransLateFee();
+  void set(const CustomerList&);
+  void display()const;
+  void write(ofstream&)const;
+  void read(ifstream&);
+  Date getdue()const;
+  double getlate()const;
+
+ private:
+  Date due;
+  static double late ;
+  void setTransAmt(const CustomerList&);
+};
+
+
+#endif
+
+
+
+
+
+
+
+
+
+haj@zeus:11:cat translatefee.cc
+#include "transLateFee.h"
+
+double TransLateFee::late=25;
+
+TransLateFee::TransLateFee(){
+  setttype(latecharge);
+
+}
+
+void TransLateFee::set(const CustomerList& l1){
+  Transaction::set(l1);
+  cout<<"Enter the due date :";
+  due.set();
+  cout<<"Transaction amout set to ";
+  moneyDisplay(late);
+  cout<<endl;
+
+}
+void TransLateFee::display()const{
+  Transaction::display();
+  cout<<"Late Fee\t";
+  moneyDisplay(late);
+  cout<<endl;
+  cout<<"Due Date: ";
+  due.display();
+  cout<<tab<<"Late Fee:  ";
+  moneyDisplay(late);
+  cout<<endl ;
+
+}
+
+void TransLateFee::write(ofstream& f)const{
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+  f<<late<<endl;
+  due.write(f);
+  
+}
+
+void TransLateFee::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1;
+  setAmt(d1);
+  f>>late;
+  due.read(f);
+
+}
+Date TransLateFee::getdue()const{
+  return due;
+
+}
+double TransLateFee::getlate()const{
+  return late;
+}
+
+void TransLateFee::setTransAmt(const CustomerList&){
+  
+
+}
+
+
+
+
+
+
+haj@zeus:12:cat transPayment.h
+#ifndef _transPayment_h
+#define _transPayment_h
+#include "transaction.h" 
+
+class TransPayment : public Transaction {
+ public:
+  TransPayment::TransPayment();
+  void set(const CustomerList&);
+  void display()const;
+  void read(ifstream&);
+  void write(ofstream&)const;
+
+ private:
+  void setTransAmt(const CustomerList&);
+};
+
+
+#endif 
+
+haj@zeus:13:cat transpayment.cc
+#include "transPayment.h"
+
+TransPayment::TransPayment(){
+  setttype(payment);
+}
+
+void TransPayment::set(const CustomerList& l1){
+  Transaction::set(l1);
+  setTransAmt(l1);
+
+}
+void TransPayment::display()const{
+  Transaction::display();
+  cout<<"Payment amount: ";
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+
+}
+
+void TransPayment::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1>>ws;
+  setAmt(d1);
+}
+
+void TransPayment::write(ofstream& f)const{
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+
+}
+
+
+void TransPayment::setTransAmt(const CustomerList&){
+  double d1;
+  cout<<"Enter the payment amount: ";
+  d1=setReal();
+  cout<<"Transaction amount set to $"<<-d1<<endl;
+  setAmt(-d1);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+haj@zeus:14:g++   ls
+#cutsomerList.h#       demo6.cc               transMonthlyUse.h~
+#transMonthlyUse.h#    demo6.cc~              transPayment.h
+#transaction.h#        dialup.cc              transPayment.h~
+#transmonthlyfee.cc#   dialup.h               transaction.cc
+#transmonthlyuse.cc#   dsl.cc                 transaction.cc~
+a.out*                 dsl.h                  transaction.h
+customer.cc            hw6                    transaction.h~
+customer.cc~           hw6~                   transextrafee.cc
+customer.h             maan.c                 transextrafee.cc~
+customerList.h         maan.c~                translatefee.cc
+customerList.h~        service.cc             translatefee.cc~
+customerlist.cc        service.h              transmonthlyuse.cc
+customerlist.cc~       transExtraFee.h        transmonthlyuse.cc~
+data                   transExtraFee.h~       transpayment.cc
+data~                  transLateFee.h         transpayment.cc~
+date.cc                transLateFee.h~        utility.cc
+date.h                 transMonthlyUse.h      utility.h
+haj@zeus:15:g++ *.cc
+haj@zeus:16:a.out
+First we read the CustomerList from an existing file.
+Name of the file to be read:  data
+Reading file data ...
+The contents of the CustomerList: 
+Id ,Name: 11111, first customer
+Address:  (222)333-4444
+Phone: 123 Line1 Street; Line2 Apartment 3; Boston; MA; 12313
+Account Date:  August 1, 2000
+Service Type: Dialup	Daily Rate: $0.60
+Web space Limit: 10 MB
+-----------------
+Id ,Name: 22222, second customer
+Address:  (111)444-2222
+Phone: 333 Addrline1 Street; Suite Sue; Cambridge; MA; 02020
+Account Date:  November 1, 1999
+Service Type: DSL	Daily Rate: $1.20
+installation Fee: $150.00
+Number of fixed IP addresses: 12
+-----------------
+Id ,Name: 33333, third in list
+Address:  (393)939-3939
+Phone: 222 Any Street; some department; mudville; CT; 04400
+Account Date:  February 1, 2001
+Service Type: DSL	Daily Rate: $1.10
+installation Fee: $100.00
+Number of fixed IP addresses: 9
+-----------------
+Id ,Name: 53535, fourth on board
+Address:  (234)234-9873
+Phone: 3833 Some Avenue; Executive office; Somertime; NY; 12312
+Account Date:  November 1, 2000
+Service Type: Dialup	Daily Rate: $0.70
+Web space Limit: 12 MB
+-----------------
+
+Now we work with the Transaction hierarchy.
+Enter the size of the array of Transaction pointers: 5
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 0
+Enter the first few characters of the customer's name: s
+Name: second customer	ID: 22222? y
+Enter the transaction date. 
+Year: 1990
+Month (a number from 1 to 12): 1
+Day of the month: 2
+Enter the start date of this billing period :Year: 1990
+Month (a number from 1 to 12): 5
+Day of the month: 1
+Enter the end date for this billing period: Year: 1995
+Month (a number from 1 to 12): 4
+Day of the month: 1
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 1
+Enter the first few characters of the customer's name: f
+Name: first customer	ID: 11111? n
+Name: fourth on board	ID: 53535? y
+Enter the transaction date. 
+Year: 1999
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the charge for this extra service: 900
+Charge must be between $25and $100.please try again.
+12
+Charge must be between $25and $100.please try again.
+100
+Enter the date of this extra service: Year: 2001
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter a brief description of the service:you just pay more  .thats it!.
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 2
+Enter the first few characters of the customer's name: t
+Name: third in list	ID: 33333? n
+not found
+Enter the first few characters of the customer's name: t
+Name: third in list	ID: 33333? y
+Enter the transaction date. 
+Year: 1990
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the due date :Year: 1995
+Month (a number from 1 to 12): 2
+Day of the month: 3
+Transaction amout set to $25.00
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 3
+Enter the first few characters of the customer's name: sec
+Name: second customer	ID: 22222? y
+Enter the transaction date. 
+Year: 2001
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the payment amount: 2000
+Transaction amount set to $-2000.00
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 0
+Enter the first few characters of the customer's name: se
+Name: second customer	ID: 22222? y
+Enter the transaction date. 
+Year: 2001
+Month (a number from 1 to 12): 3
+Day of the month: 4
+Enter the start date of this billing period :Year: 100   2004
+Month (a number from 1 to 12): 1
+Day of the month: 2
+Enter the end date for this billing period: Year: 2001
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Start date must be earlier than end date. Please try again.
+Enter the start date of this billing period :Year: 2001
+Month (a number from 1 to 12): 2
+Day of the month: 3
+Enter the end date for this billing period: Year: 2001 4
+Month (a number from 1 to 12): 2
+Day of the month: 3
+Another transaction (y/n)? n
+The contents of the array: 
+---------------
+[0]  22222	1/2/1990	Monthly Use Charge	$25862.40
+Usage fee for period 5/1/1990 - 4/1/1995: $25862.40
+[1]  53535	3/2/1999	Extra Service Fee	$100.00
+Service Date: 3/2/2001
+Service Description: you just pay more.thats it!.
+[2]  33333	3/2/1990	Late Fee	$25.00
+Due Date: 2/3/1995	Late Fee:  $25.00
+[3]  22222	3/2/2001	Payment amount: $-2000.00
+[4]  22222	3/4/2001	Monthly Use Charge	$15768.00
+Usage fee for period 2/3/2001 - 2/3/2004: $15768.00
+---------------
+Now we save the array to a file.
+Please enter the file name for saving this data: ^[[C^[[D        maan.c
+File already exists ... Ok to overwrite (y/n)? 
+y
+Writing to file maan.c ...
+Data has been written to file.
+Now we can reopen the same file and read the data into a different array.
+Name of the file to be read:  maan.c
+Reading file maan.c ...
+Here is the data that was in the file: 
+---------------
+[0]  22222	1/2/1990	Monthly Use Charge	$25862.40
+Usage fee for period 5/1/1990 - 4/1/1995: $25862.40
+[1]  53535	3/2/1999	Extra Service Fee	$100.00
+Service Date: 3/2/2001
+Service Description: you just pay more.thats it!.
+[2]  33333	3/2/1990	Late Fee	$25.00
+Due Date: 2/3/1995	Late Fee:  $25.00
+[3]  22222	3/2/2001	Payment amount: $-2000.00
+[4]  22222	3/4/2001	Monthly Use Charge	$15768.00
+Usage fee for period 2/3/2001 - 2/3/2004: $15768.00
+---------------
+haj@zeus:17:a.out
+First we read the CustomerList from an existing file.
+Name of the file to be read:  data
+Reading file data ...
+The contents of the CustomerList: 
+Id ,Name: 11111, first customer
+Address:  (222)333-4444
+Phone: 123 Line1 Street; Line2 Apartment 3; Boston; MA; 12313
+Account Date:  August 1, 2000
+Service Type: Dialup	Daily Rate: $0.60
+Web space Limit: 10 MB
+-----------------
+Id ,Name: 22222, second customer
+Address:  (111)444-2222
+Phone: 333 Addrline1 Street; Suite Sue; Cambridge; MA; 02020
+Account Date:  November 1, 1999
+Service Type: DSL	Daily Rate: $1.20
+installation Fee: $150.00
+Number of fixed IP addresses: 12
+-----------------
+Id ,Name: 33333, third in list
+Address:  (393)939-3939
+Phone: 222 Any Street; some department; mudville; CT; 04400
+Account Date:  February 1, 2001
+Service Type: DSL	Daily Rate: $1.10
+installation Fee: $100.00
+Number of fixed IP addresses: 9
+-----------------
+Id ,Name: 53535, fourth on board
+Address:  (234)234-9873
+Phone: 3833 Some Avenue; Executive office; Somertime; NY; 12312
+Account Date:  November 1, 2000
+Service Type: Dialup	Daily Rate: $0.70
+Web space Limit: 12 MB
+-----------------
+
+Now we work with the Transaction hierarchy.
+Enter the size of the array of Transaction pointers: 7
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 0 3
+Enter the first few characters of the customer's name: se
+Name: second customer	ID: 22222? y
+Enter the transaction date. 
+Year: 1002
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the payment amount: 1900
+Transaction amount set to $-1900.00
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 0
+Enter the first few characters of the customer's name: t
+Name: third in list	ID: 33333? y
+Enter the transaction date. 
+Year: 2001
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the start date of this billing period :Year: 1002
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the end date for this billing period: Year: 1005
+Month (a number from 1 to 12): 3
+Day of the month: 3
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 2
+Enter the first few characters of the customer's name: f
+Name: first customer	ID: 11111? n
+Name: fourth on board	ID: 53535? n
+not found
+Enter the first few characters of the customer's name: f
+Name: first customer	ID: 11111? n
+Name: fourth on board	ID: 53535? y
+Enter the transaction date. 
+Year: 2300
+Month (a number from 1 to 12): 3
+Day of the month: 4
+Enter the due date :Year: 1900
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Transaction amout set to $25.00
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 1
+Enter the first few characters of the customer's name: f
+Name: first customer	ID: 11111? y
+Enter the transaction date. 
+Year: 2001
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Enter the charge for this extra service: 1000
+Charge must be between $25and $100.please try again.
+50
+Enter the date of this extra service: Year: 2003
+Month (a number from 1 to 12): 2
+Day of the month: 3
+Enter a brief description of the service:as I said .we just take more.
+Another transaction (y/n)? y
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type: 0
+Enter the first few characters of the customer's name: t
+Name: third in list	ID: 33333? y
+Enter the transaction date. 
+Year: 1002
+Month (a number from 1 to 12): 3
+Day of the month: 4
+Enter the start date of this billing period :Year: 20003
+Month (a number from 1 to 12): 20004
+Invalid month! Please try again.
+Month (a number from 1 to 12): 3333
+Invalid month! Please try again.
+Month (a number from 1 to 12): 2
+Day of the month: 1
+Enter the end date for this billing period: Year: 20003
+Month (a number from 1 to 12): 4
+Day of the month: 5
+Another transaction (y/n)? n
+The contents of the array: 
+---------------
+[0]  22222	3/2/1002	Payment amount: $-1900.00
+[1]  33333	3/2/2001	Monthly Use Charge	$10860.30
+Usage fee for period 3/2/1002 - 3/3/1005: $10860.30
+[2]  53535	3/4/2300	Late Fee	$25.00
+Due Date: 3/2/1900	Late Fee:  $25.00
+[3]  11111	3/2/2001	Extra Service Fee	$50.00
+Service Date: 2/3/2003
+Service Description: as I said .we just take more.
+[4]  33333	3/4/1002	Monthly Use Charge	$623.70
+Usage fee for period 2/1/20003 - 4/5/20003: $623.70
+---------------
+Now we save the array to a file.
+Please enter the file name for saving this data: data
+File already exists ... Ok to overwrite (y/n)? 
+n
+Please enter the file name for saving this data: maan.c
+File already exists ... Ok to overwrite (y/n)? 
+y
+Writing to file maan.c ...
+Data has been written to file.
+Now we can reopen the same file and read the data into a different array.
+Name of the file to be read:  maan.c
+Reading file maan.c ...
+Here is the data that was in the file: 
+---------------
+[0]  22222	3/2/1002	Payment amount: $-1900.00
+[1]  33333	3/2/2001	Monthly Use Charge	$10860.30
+Usage fee for period 3/2/1002 - 3/3/1005: $10860.30
+[2]  53535	3/4/2300	Late Fee	$25.00
+Due Date: 3/2/1900	Late Fee:  $25.00
+[3]  11111	3/2/2001	Extra Service Fee	$50.00
+Service Date: 2/3/2003
+Service Description: as I said .we just take more.
+[4]  33333	3/4/1002	Monthly Use Charge	$623.70
+Usage fee for period 2/1/20003 - 4/5/20003: $623.70
+---------------
+haj@zeus:18:cat maan.c
+5
+3
+22222
+791
+-1900
+0
+33333
+365669
+10860.3
+791
+1888
+2
+53535
+474878
+5.8635e-309
+25
+328779
+1
+11111
+365669
+50
+366372
+as I said .we just take more.
+0
+33333
+793
+623.7
+6940735
+6940798
+haj@zeus:19:
+script done on Fri Nov 02 17:54:07 2001

@@ -1,0 +1,213 @@
+Script started on Tue Dec 11 02:05:02 2001
+[haj@f431-02 cfiles]$ a.out
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 0 2
+	###### Customer List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 3
+	###### Customer List is empty .
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 4
+	###### Customer List is empty - No transactions are possible.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 5
+Remove Customer
+	###### Customer List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 6
+	###### Customer List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 7
+	###### Customer List is empty - No transactions are possible.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 8
+	###### Customer List is empty - No transactions are possible.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+	###### Transaction List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 10
+	###### Transaction List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 22
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 11
+	###### Transaction List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 12
+	###### Transaction List is empty.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 13
+[haj@f431-02 cfiles]$ exit
+exit
+
+Script done on Tue Dec 11 02:06:09 2001

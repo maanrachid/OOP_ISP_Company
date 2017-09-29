@@ -1,0 +1,12 @@
+This project is written by Maan Haj Rachid
+in Object-Oriented programming course At Suffolk University.
+
+It is a simulation for an ISP service.
+
+To compile : run make
+
+clf is a customer list file
+tlf is a transaction list file
+
+
+Thank you

@@ -1,0 +1,4682 @@
+Script started on Tue Dec 11 01:20:24 2001
+[haj@f431-02 cfiles]$ cat option.h
+#ifndef _option_h
+#define _option_h
+#define tab '\t'
+#include "transactionList.h"
+#include "customerList.h"
+const int OPTCOUNT = 14;
+
+void openOutputFile(ofstream& outfile);
+void openInputFile(ifstream& infile); 
+
+class Option {
+ public:
+  virtual ~Option() {}
+  virtual void execute() = 0;
+  string getOptName() {return optName;}
+ protected:
+  Option(string name): optName(name) {}
+  string optName;
+  static bool clchange,tlchange;
+};
+
+class OptFactory {
+ public:
+  static Option* create(CustomerList& cl, TransactionList& tl, int opt);
+  static string optName[OPTCOUNT]; // array of Option names
+  static void displayOptTypes();
+  static void menu(CustomerList& cl, TransactionList& tl); 
+};
+
+class OptEditCust : public Option {
+ public:
+  OptEditCust(CustomerList& cl):
+    Option("Edit Customer"), clptr(&cl){clchange=true;}
+  void execute();
+ private:
+  CustomerList* clptr;
+};
+
+class OptRemoveCust : public Option {
+ public:
+  OptRemoveCust(CustomerList& cl,TransactionList& tl):
+    Option("Remove Customer"), clptr(&cl),tlptr(&tl){clchange=true;}
+  void execute();
+ private:
+  CustomerList* clptr;
+  TransactionList* tlptr;
+};
+
+
+
+class OptAddCust : public Option {
+ public:
+  OptAddCust(CustomerList& cl) : 
+    Option("Add Customers"), clptr(&cl){clchange=true;}
+  void execute();
+ private:
+  CustomerList* clptr;
+};
+
+class OptDisplayCust : public Option { // displays one or all Customers
+ public:
+  OptDisplayCust(CustomerList& cl) :
+    Option("Display Customers"),clptr(&cl){}
+  void execute();
+ private:
+  CustomerList* clptr;
+};
+
+class OptFindCust : public Option {     // finds the customer id for a customer
+ public:
+  OptFindCust(CustomerList& cl) :
+    Option("Find Customer"),clptr(&cl){}
+  void execute();
+ private:
+  CustomerList* clptr;
+};
+
+class OptReadCust : public Option {   // reads the CustomerList from a file
+ public:
+  OptReadCust(CustomerList& cl) :
+    Option("Read Customer List"),clptr(&cl){}
+  void execute();
+ private:
+  CustomerList* clptr;
+};
+
+class OptWriteCust : public Option {    // writes the CustomerList to a file
+   public:
+  OptWriteCust(CustomerList& cl) :
+    Option("Write Customer List"),clptr(&cl){clchange=false;}
+  void execute();
+ private:
+  CustomerList* clptr;
+};
+
+class OptAddTrans : public Option {     // add Transactions to the TransList
+ public:
+  OptAddTrans(CustomerList& cl,TransactionList& tl) :
+    Option("Add transactions"),clptr(&cl),tlptr(&tl){tlchange=true;}
+  void execute();
+ private:
+  CustomerList* clptr;
+  TransactionList* tlptr;
+};        
+
+class OptEditTrans : public Option {     // edit transactions
+ public:
+  OptEditTrans(CustomerList& cl,TransactionList& tl) :
+    Option("Edit transactions"),clptr(&cl),tlptr(&tl){tlchange=true;}
+  void execute();
+ private:
+  CustomerList* clptr;
+  TransactionList* tlptr;
+};
+
+class OptRemoveTrans : public Option {
+  // Remove Transactions from the TransList
+ public:
+  OptRemoveTrans(CustomerList& cl,TransactionList& tl) :
+    Option("Remove Transactions"),clptr(&cl),tlptr(&tl){tlchange=true;}
+  void execute();
+ private:
+  CustomerList* clptr;
+  TransactionList* tlptr;
+};
+
+class OptDisplayTrans : public Option {  // add Transactions to the TransList
+ public:
+  OptDisplayTrans(CustomerList& cl,TransactionList& tl) :
+    Option("Display transactions"),clptr(&cl),tlptr(&tl){}
+  void execute();
+ private:
+  CustomerList* clptr;
+  TransactionList* tlptr;
+};
+
+
+
+class OptQuit : public Option {
+ public:
+  OptQuit():
+    Option("Quit"){}
+  void execute();
+ private:
+};
+
+class OptReadTrans : public Option { // reads the TransList from a file
+ public:
+  OptReadTrans(TransactionList& tl,CustomerList& cl) :
+    Option("Read Transaction List"),tlptr(&tl),clptr(&cl){}
+  void execute();
+ private:
+  TransactionList* tlptr;
+  CustomerList* clptr;
+};
+
+class OptWriteTrans : public Option {  // writes the TransList to a file
+ public:
+  OptWriteTrans(TransactionList& tl) :
+    Option("Write Transaction List"),tlptr(&tl){tlchange=false;}
+  void execute();
+ private:
+  TransactionList* tlptr;
+};
+
+
+#endif 
+[haj@f431-02 cfiles]$ cat option.cc
+#include "option.h"
+
+bool Option::clchange=false;
+bool Option::tlchange=false;
+
+string OptFactory::optName[]={"Read Customer List","Add Customers",
+			      "Display Customers","Find Customer",
+			      "Edit Customer","Remove Customer",
+			      "Write Customer List","Read Transaction List",
+			      "Add Transactions","Display Transactions",
+			      "Edit Transaction","Remove Transaction",
+			      "Write Transaction List","Quit"};
+
+
+
+Option* OptFactory::create(CustomerList& cl, TransactionList& tl, int opt){
+  Option* op;
+  switch (opt){
+  case 0:
+    op=new OptReadCust(cl);
+    break;
+  case 1:
+    op=new OptAddCust(cl);
+    break;
+  case 2:
+    op=new OptDisplayCust(cl);
+    break;
+  case 3:
+    op=new OptFindCust(cl);
+    break;
+  case 4:
+    op=new OptEditCust(cl);
+    break;
+  case 5:
+    op=new OptRemoveCust(cl,tl);
+    break;
+  case 6:
+    op=new OptWriteCust(cl);
+    break;
+  case 7:
+    op=new OptReadTrans(tl,cl);
+    break;
+  case 8:
+    op=new OptAddTrans(cl,tl);
+    break;
+  case 9:
+    op=new OptDisplayTrans(cl,tl);
+    break;
+  case 10:
+    op=new OptEditTrans(cl,tl);
+    break;
+  case 11:
+    op=new OptRemoveTrans(cl,tl);
+    break;
+  case 12:
+    op=new OptWriteTrans(tl);
+    break;
+  case 13:
+    op=new OptQuit();
+    break;
+  }
+  return op; 
+
+}
+
+
+void OptFactory::displayOptTypes(){
+  for(int h=0;h<OPTCOUNT;h++){
+    cout<<tab<<tab<<'('<<h<<')'<<tab<<optName[h]<<endl;
+  }
+}
+
+void OptFactory::menu(CustomerList& cl, TransactionList& tl){
+  int choice;
+  Option* op=NULL;
+  do{
+    displayOptTypes();
+    cout<<tab<<tab<<tab<<"Your choice: ";
+    choice=setInt();
+    if (choice==OPTCOUNT) break;
+    if ((choice<0)||(choice>OPTCOUNT)) continue;
+    if (op!=NULL){delete op;} 
+    op=create(cl,tl,choice);
+    op->execute();
+  }while(true);
+}
+
+
+void OptAddCust::execute() {
+  cout << getOptName() << endl;
+  clptr->set();
+}
+
+void OptDisplayCust::execute(){
+  bool shortform;
+  string id;
+  if (clptr->isEmpty())
+    cout<<tab<<"###### Customer List is empty.\n";
+  else{
+    cout << getOptName() << endl;
+    cout<< "Use short display format (Y/N)? ";
+    shortform=yes();
+    cout<<"Enter Customer ID (or \"All\") ";
+    getline(cin,id);
+    if ((clptr->isInList(id))||(id=="All"))
+      clptr->display(id,shortform);
+    else
+      cout<<tab<<"****** "<<id<<" not found."<<endl;
+  }
+}
+
+void OptFindCust::execute(){
+  string str,id;
+  if (clptr->isEmpty())
+    cout<<tab<<"###### Customer List is empty .\n";
+  else {
+    cout << getOptName() << endl;
+    cout<<"Enter the first few characters of the customer's name:";
+    getline(cin,str);
+    id=clptr->findid(str);
+    if (id=="not found") cout<<str<<" "<<id<<endl;
+    uppercaseString(id);
+    cout<<"Requested Customer ID is:"<<id<<endl;
+  }
+}
+
+void OptReadCust::execute(){
+  ifstream f;
+  cout<<getOptName()<<endl;
+  openInputFile(f);
+  if (!clptr->isEmpty()){
+    cout<<"*** There are already "<<clptr->size()<<" Customers in the list.\n";
+    cout<<"Do you want to keep the old data in the Customer list? ";
+    if (!yes())
+      clptr->clear();
+  }  
+  clptr->read(f);
+  f.close();
+}
+
+void OptEditCust::execute(){
+  if (clptr->isEmpty())
+    cout<<tab<<"###### Customer List is empty - No transactions are possible.\n";
+  else {
+  cout<<getOptName()<<endl;
+  clptr->edit();
+  }
+}
+
+void OptRemoveCust::execute(){
+  cout<<getOptName()<<endl;
+  clptr->remove(*tlptr);
+}
+
+void OptWriteCust::execute(){
+  ofstream f;
+  if (clptr->isEmpty())
+    cout<<tab<<"###### Customer List is empty.\n";
+  else {
+    cout<<getOptName()<<endl;
+    openOutputFile(f);
+    clptr->write(f);
+    f.close();
+  }
+}
+
+void OptAddTrans::execute(){
+  if (clptr->isEmpty())
+    cout<<tab<<"###### Customer List is empty - No transactions are possible.\n";
+  else {
+    cout<<getOptName()<<endl;
+    tlptr->set(*clptr);
+  }
+}
+
+void OptEditTrans::execute(){
+  if (tlptr->isEmpty())
+    cout<<tab<<"###### Transaction List is empty.\n";
+  else {
+    cout<<getOptName()<<endl;
+    tlptr->edit(*clptr);
+  }
+}
+
+void OptRemoveTrans::execute(){
+  if (tlptr->isEmpty())
+    cout<<tab<<"###### Transaction List is empty.\n";
+  else {
+    cout<<getOptName()<<endl;
+    tlptr->remove(*clptr);
+  }
+}
+
+void OptQuit::execute(){
+  if (tlchange || clchange){
+    if (clchange) cout<<"Customer List may have been changed.\n";
+    if (tlchange) cout<<"Transaction List may have been changed.\n";
+    cout<<"Do you want to quit without saving(y/n)? ";
+    if (yes()) exit(1);
+    else cout<<"Returning to menu.\n";
+  }else exit(1);
+}
+
+void OptDisplayTrans::execute(){
+  bool shortform;
+  string str;
+  if (tlptr->isEmpty())
+    cout<<tab<<"###### Transaction List is empty.\n";
+  else {
+    cout<<getOptName()<<endl;
+    cout<<"Use short display format (y/n)? ";
+    shortform=yes();
+    cout<<"Enter customer ID (or \"All\") ";
+    getline(cin,str);
+    if ((str=="All")||(clptr->isInList(str)))
+      tlptr->display(*clptr,str,shortform);
+    else
+      cout<<tab<<"##### No transactions for cust ID:"<<str<<endl;
+  }
+}
+
+void OptReadTrans::execute(){
+  ifstream f;
+  if (!clptr->isEmpty()){
+    cout<<getOptName()<<endl;
+    openInputFile(f);
+    if (!tlptr->isEmpty()){
+      cout<<"Do you want to keep old data? ";
+      if (!yes()) 
+	tlptr->clear();
+    }
+    tlptr->read(f,*clptr);
+    f.close();
+  }else cout<<'\t'
+	    <<"###### Customer List is empty - No transactions are possible."
+	    <<endl;
+}
+
+void OptWriteTrans::execute(){
+  ofstream f;
+  if (tlptr->isEmpty())
+    cout<<tab<<"###### Transaction List is empty.\n";
+  else {
+    cout<<getOptName()<<endl;
+    openOutputFile(f);
+    tlptr->write(f);
+    f.close();
+  }
+}
+
+void openOutputFile(ofstream& outfile) {
+  string filename;
+  ifstream oldfile;
+  while(1) {
+    cout << "Please enter the file name for saving this data: " << flush;
+    cin >> ws;
+    getline(cin, filename);
+    oldfile.open(filename.c_str());
+    if (!oldfile)
+      break;
+    cout << "File already exists ... Ok to overwrite (y/n)? " << endl;
+    if (yes()) break;
+    oldfile.close();
+  }
+  oldfile.close();
+  outfile.open(filename.c_str());
+  cout << "Writing to file " << filename << " ..." << endl;
+}
+
+void openInputFile(ifstream& infile) {
+  string filename;
+
+  while(1) {
+    cout << "Name of the file to be read:  " << flush;
+    cin >> ws;
+    getline(cin, filename);
+    infile.open(filename.c_str());
+    if (infile)
+      break;
+    cout << "File does not exist ... Please try again. " << endl;
+  }
+  cout << "Reading file " << filename << " ..." << endl;
+}
+[haj@f431-02 cfiles]$ cat transactionl List.h
+#ifndef _transactionList_h
+#define _transactionList_h
+#include <map>
+#include <string>
+#include "transaction.h"
+
+typedef multimap<string,Transaction*> MMap;
+typedef multimap<string,Transaction*>::iterator MIt;
+typedef multimap<string,Transaction*>::const_iterator CONMIt;
+
+
+class TransactionList{
+ public:
+  TransactionList(){}
+  TransactionList(const TransactionList&);
+  ~TransactionList(){clear();}
+  TransactionList& operator=(const TransactionList&);
+  void clear();
+  void set(CustomerList&);
+  void display(CustomerList&,string strid="All",bool shortform =true
+	       )const;
+  void remove(string strid);
+  double accountTotal(string strid)const;
+  void write(ofstream&)const;
+  void read(ifstream&,CustomerList& cl);
+  bool isEmpty()const;
+  int transCount(string strid)const;
+  void insert(Transaction* ptr);
+  bool isInList(const string)const;
+  bool isInList(Transaction* ptr)const;
+  void edit(CustomerList& cl);
+  void remove(CustomerList& cl);
+
+ private:
+  MMap mm;
+  
+
+
+
+};
+
+
+
+#endif
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transactionlist.cc
+#include "transactionList.h"
+
+void TransactionList::clear(){
+  for(MIt y=mm.begin();y!=mm.end();y++)
+    delete y->second;
+  mm.clear();
+}
+
+void TransactionList::edit(CustomerList& cl){
+  string strid,strname;
+  Transaction* ptr;
+  if (!isEmpty()){
+    cout<<"Enter the first few characters of the customer's name: ";
+    getline(cin,strname);
+    strid=cl.findid(strname);
+    for(MIt y=mm.begin();y!=mm.end();y++){
+      if (strid==y->first){
+	y->second->display(0);
+	cout<<"Edit this Transaction (y/n)? ";
+	if (yes()) y->second->edit(cl);
+	if (y->second->gettcustomerid()!=y->first){
+	  cout<<"*** Transaction has been associated with a different custID.\n";
+	  
+	  if (y->second!=NULL) ptr=y->second->clone();
+	  MIt u=y;
+	  mm.erase(u);
+	  insert(ptr);
+	}
+      }
+    }
+    cl.setAcctBalance(*this,"All");
+  }else cout<<'\t'<<"###### Transaction List is empty.\n";
+  
+}
+
+void TransactionList::insert(Transaction* ptr){
+  mm.insert(make_pair(string(ptr->gettcustomerid()),
+		      TransactionFactory::create(ptr)));
+}
+
+TransactionList::TransactionList(const TransactionList& trl){
+  *this=trl;    /*not a shallow copy*/
+}
+  
+TransactionList& TransactionList::operator=(const TransactionList& trl){
+  clear();
+  for(CONMIt y=trl.mm.begin();y!=trl.mm.end();y++)
+    mm.insert(make_pair(string(y->first),y->second->clone()));
+  return (*this);
+}  
+
+
+
+void TransactionList::set(CustomerList& cusl){
+  Transaction* ptr;
+  do {
+    ptr=TransactionFactory::create(cusl);
+    insert(ptr);
+    cusl.setAcctBalance(*this,ptr->gettcustomerid());
+    cout<<"Another Transaction (Y/N)? ";
+  }while(yes());
+
+}
+
+void TransactionList::display(CustomerList& cusl,string strid,
+			      bool shortform)const{
+  
+  if(strid=="All"){
+    for(CONMIt y=mm.begin(); y != mm.end(); y++){
+      if (cusl.isInList(y->first)){
+	if (!shortform)  cusl.display(y->first);
+	y->second->display();
+	cout<<"----------------------\n";
+      }
+    }
+  }else{ 
+    for(CONMIt y=mm.begin(); y != mm.end(); y++){
+      if (y->second->gettcustomerid()==strid){
+	if (!shortform) cusl.display(y->first);
+	y->second->display();
+	cout<<"----------------------\n";
+      }
+    }
+  }
+}
+
+bool TransactionList::isInList(Transaction* ptr)const{
+  string str1=ptr->gettcustomerid();
+  for(CONMIt y= mm.lower_bound(str1); y!= mm.upper_bound(str1); ++y){
+    if (y->second->getTType()==ptr->getTType()){
+      if (y->second->getobj()==ptr->getobj()) return true;
+    }
+  } 
+  return false; 
+}
+
+
+bool TransactionList::isInList(const string strid)const{
+  for(CONMIt y=mm.begin();y!=mm.end();y++){
+    if (y->first==strid)
+      return true;
+  }
+  return false;
+}
+
+void TransactionList::remove(CustomerList& cl){
+  string strid,strname;
+  if (!isEmpty()){
+    cout<<"Enter the first few characters of the customer's name: ";
+    getline(cin,strname);
+    strid=cl.findid(strname);
+    remove(strid);
+    cl.setAcctBalance(*this,strid);
+  }else
+    cout<<"###### Transaction List is empty.\n";
+}
+
+
+void TransactionList::remove(string strid){
+  MIt t1;
+  for(MIt y=mm.begin(); y != mm.end(); y++){
+    if (y->first==strid){
+      y->second->display();
+      cout<<"Delete this transaction(Y/N)? ";
+      if (yes()){
+	delete y->second;
+	t1=y;
+	mm.erase(y);
+	y=t1;
+      }else
+	cout<<"Transaction not deleted\n";
+      cout<<"Another deletion(Y/N)?  ";
+      if (!yes()) break;
+    }
+  }
+  
+}
+
+double TransactionList::accountTotal(string strid)const{
+  double z=0;
+  for(CONMIt y=mm.begin(); y != mm.end(); y++){
+    if (y->first==strid)
+      z+=(y->second->gettamount());
+  }
+  return z;
+}
+
+void TransactionList::write(ofstream& f)const{
+  f<<mm.size()<<endl;
+  for(CONMIt y=mm.begin(); y != mm.end(); y++){
+    y->second->write(f);
+  }
+}
+
+
+void TransactionList::read(ifstream& f, CustomerList& cl){
+  int temp,n,l;
+  Transaction* ptr;
+  f>>temp;
+  for(n=1;n<=temp;n++){
+    f>>l>>ws;
+    ptr=TransactionFactory::create(l);
+    ptr->read(f);
+    if (!isInList(ptr)&&cl.isInList(ptr->gettcustomerid())) insert(ptr);
+    delete ptr;
+  }
+  cl.setAcctBalance(*this,"All");
+  cl.printcuswithnotrans(*this);
+}
+
+bool TransactionList::isEmpty()const{
+  return mm.empty();
+}
+
+int TransactionList::transCount(string strid)const{
+  int counter=0;
+  for(CONMIt y=mm.begin(); y != mm.end(); y++){
+    if (y->first==strid)
+      counter++;
+  }
+  return counter;
+}
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat customerList.h
+#ifndef _customerList_h
+#define _customerList_h
+
+#include <map>
+#include <string>
+#include <iostream>
+#include "utility.h"
+#include "customer.h"
+
+class TransactionList;
+
+
+typedef map<string, Customer> Bag; 
+typedef map<string, Customer>::const_iterator itr;
+typedef map<string, Customer>::iterator CHAitr;
+typedef Bag::value_type val;
+
+
+class CustomerList{
+ public:
+  void set();
+  void clear();
+  bool insert(const Customer& cus);
+  void display(string str="All",bool shortform=true);
+  void remove(string csId);
+  itr find(string csId)const;
+  void read(ifstream& f);
+  void write(ofstream& f)const;
+  bool isEmpty()const;
+  bool isInList(Customer& cus);
+  bool isInList(const string& csId)const;
+  Customer operator[](const string&)const;
+  string findid(const string&)const;
+  void setAcctBalance(const TransactionList&,string strid="ALL");
+  void edit();
+  void remove(TransactionList& tr);
+  int size(){return b.size();}
+  void printcuswithnotrans(const TransactionList&)const;
+  void fixnogap(Date d,const string strid);
+  
+ private:
+  Bag b;
+  
+};
+
+#endif
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transaction. list.cc                   customer         cuts  stomerlist.cc
+#include "customerList.h"
+#include "transactionList.h"
+
+void CustomerList::clear(){
+  b.clear();
+}
+
+void CustomerList::fixnogap(Date d,const string strid){
+  b[strid].nogap=d;
+}
+
+void CustomerList::printcuswithnotrans(const TransactionList& tr)const{
+  for(itr i=b.begin();i!=b.end();i++){
+    if (!(tr.isInList(i->first))) cout<<(i->first)<<" has no Transactions.\n";
+  }
+}
+
+void CustomerList::remove(TransactionList& tl){
+  string strname,strid;
+  if (!isEmpty()){
+    cout<<"Enter the first few characters of the customer's name:";
+    getline(cin,strname);
+    strid=findid(strname);
+    if (strid!="not found"){
+      if(!tl.isInList(strid)){
+	b[strid].display(0);
+	cout<<"Are you sure that you want to remove this Customer (y/n)? ";
+	if (yes()) remove(strid);
+      }else{
+	cout<<"*** This Customer has transactions on file which must\n";
+	cout<<"*** all be removed before the Customer can be removed.\n";
+      }  
+    }else cout<<strname<<" "<<strid<<endl;
+  }else 
+    cout<<'\t'<<"###### Customer List is empty.\n";
+}
+
+void CustomerList::edit(){
+  string strname,strid;
+  cout<<"Enter the first few characters of the customer's name:";
+  getline(cin,strname);
+  strid=findid(strname);
+  if (strid!="not found")
+    b[strid].edit();
+  else
+    cout<<strname<<" "<<strid<<endl;
+}
+
+void CustomerList::setAcctBalance(const TransactionList& tl1,string strid){
+  if (strid=="All"){
+    for(CHAitr i=b.begin();i!=b.end();i++){
+      /* using the power of friend .Thats cool!*/
+      i->second.accountBalance = tl1.accountTotal(i->first);
+    }
+  }else if (isInList(strid))
+    b[strid].accountBalance =tl1.accountTotal(strid);
+}
+
+
+
+string CustomerList::findid(const string& info)const{
+  int n=info.length();
+  for(itr i = b.begin(); i != b.end(); ++i) {
+    /* I think compare is better than find because the 
+       matching will be with the begining of the word 
+       which is how the databases being search usually right?*/
+    if ((*i).second.getName().compare(info,0,n)==0){
+      cout<<"Name: "<< (*i).second.getName() <<'\t';
+      cout <<"ID: "<< (*i).second.getCustomerId()<<"? " ;
+      if (yes())
+	return (*i).second.getCustomerId();
+    }
+  }
+  return "not found";
+	  
+}
+
+Customer CustomerList::operator[](const string& strid)const{
+
+  Customer cus;
+
+  if (isInList(strid)){
+    for(itr i = b.begin(); i != b.end(); ++i) {
+      if ((*i).second.getCustomerId()==strid)
+	return i->second;
+    }
+  }
+  return cus;
+}
+
+
+void CustomerList::set(){
+  Customer cs1;
+  do{
+    cs1.set();
+    cout<<"---------------\n";
+    insert(cs1);
+    cout<<"Another customer (Y/N)?";
+  }while(yes());
+}
+
+
+bool CustomerList::insert(const Customer& cus){
+  
+  string str1;
+  str1=cus.getCustomerId();  
+  if (b.find(str1)==b.end()){
+    b[str1]=cus;
+    cout<<"Not in list yet ....\n";
+    b[str1].display(0);
+    cout<<"map size so far is: "<<b.size()<<endl;
+    return true;
+  }else {
+    cout<<"CustomerID "<<str1<<" is already in use:\n";
+    b[str1].display();
+    cout<<"OK to replace (Y/N)?";
+    if (yes()){
+      b[str1]=cus;
+      cout<<"map size so far is: "<<b.size()<<endl;
+      return true;
+    }else
+      return false; 
+  }
+  
+}
+
+
+
+void CustomerList::display(string str,bool shortform){
+  Customer cs1,i;
+  if (str=="All"){
+    for(itr i = b.begin(); i != b.end(); ++i) {
+      (*i).second.display(shortform);
+      cout<<"-----------------\n";
+    }
+  }else {
+    if (b.find(str)!=b.end()){  
+      cs1=b[str]; 
+      cs1.display(shortform);
+    }
+  }
+}
+
+
+void CustomerList::remove(string csId){
+  
+  b.erase(b.find(csId)); //b.erase(csId) doesnt work?
+}
+
+
+itr CustomerList::find(string csId)const{
+  return b.find(csId);
+}
+
+
+void CustomerList::read(ifstream& f){
+  Customer cs1;
+  int i;
+  int s;
+  string str; 
+  f>>s;
+  getline(f,str);
+  for(i=1;i<=s;i++) {
+    cs1.read(f);
+    if (!isInList(cs1))
+      b[cs1.getCustomerId()]=cs1;
+    else{
+      cout<<"The customer with ID "<<cs1.getCustomerId()<<" found.\n";
+      cout<<cs1.getName()<<"\t  "<<cs1.getAccountdate()<<endl;
+      cout<<"Ok to replace(Y/N)? ";
+      if (yes())  b[cs1.getCustomerId()]=cs1;     
+    }
+  }
+}
+
+void CustomerList::write(ofstream& f)const{
+  f<<b.size()<<seperater;
+  for(itr i = b.begin(); i != b.end(); ++i) {
+    (*i).second.write(f);
+  }    
+
+}
+
+bool CustomerList::isEmpty()const{
+  return b.empty();
+}
+
+
+bool CustomerList::isInList(Customer& cus){
+  return  isInList(cus.getCustomerId());
+}
+
+
+bool CustomerList::isInList(const string& csId)const{
+  return b.count(csId);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat customer.h
+#ifndef _customer_h
+#define _customer_h
+#include "string"
+#include "date.h"
+#include <fstream.h>
+#include "service.h"
+#include "dsl.h"
+#include "dialup.h"
+
+class Customer {
+ public:
+  Customer(){serv = NULL ;accountBalance=0;}    
+  ~Customer(){delete serv;serv=NULL;}
+  Customer(const Customer& cus);
+  Customer& operator=(const Customer& cus);
+  void set();
+  void display(bool shortform=true) const;
+  void setCustomerId();
+  string getCustomerId() const;
+  void setPhone();
+  string getPhone()const;
+  void setName();
+  string getName() const;
+  void setAddress();
+  string getAddress() const;
+  void setAccountdate();
+  Date getAccountdate() const;
+  void setservice();
+  void write(ofstream&)const;
+  void read(ifstream&);
+  double calculateCharges(Date,Date);
+  double getaccountBalance();
+  friend class CustomerList;
+  void edit();
+  Date nogap;
+  
+ private:
+  string Id,phone,id,name,address;
+  Date accountdate;
+  Service* serv;
+  double accountBalance;
+};
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat customer.h cc
+/* this library will give a define to new class of type customer 
+   that will allow the client to set each member of this class 
+   alone or together by the function set .and also allow the clent to 
+   access the members by the get functions or by the get function 
+   to get all the data together.you also may write the data to a
+   file and read the data from a file by the wrie and read functions*/
+
+
+
+
+#include "customer.h"
+#define seperater '\n'     /* define a seperater
+			      between data in the file*/
+const unsigned MAX =5;
+
+void Customer::set(){
+  setCustomerId();
+  setName();
+  setAddress();
+  setPhone();
+  setAccountdate();
+  nogap=accountdate;
+  setservice();
+}
+
+void Customer::edit(){
+  cout<<"Name: "<<name<<'\t'<<":: Change (y/n)? ";
+  if (yes()) setName();
+  cout<<"Address: "<<address<<'\t'<<":: Change (y/n)? ";
+  if (yes()) setAddress();
+  cout<<"Phone: "<<phone<<'\t'<<":: Change (y/n)? ";
+  if (yes()) setPhone();
+  cout<<"Account Date: "<<accountdate<<'\t'<<":: Change (y/n)? ";
+  if (yes()) {setAccountdate(); nogap=accountdate;}
+  cout<<"Change Service(y/n)? ";
+  if (yes()) setservice();
+    
+}
+
+double Customer::getaccountBalance(){
+  return accountBalance;
+}
+
+double Customer::calculateCharges(Date d1,Date d2){
+  return serv->calculateCharges(d1,d2);
+
+}
+
+Customer& Customer::operator=(const Customer& cus){
+  if (this!=&cus){
+    id = cus.id;
+    name=cus.name;
+    address=cus.address;
+    phone=cus.phone;
+    accountdate=cus.accountdate;
+    accountBalance=cus.accountBalance;
+    nogap=cus.nogap;
+    //delete serv;
+    if (cus.serv!=NULL){
+      serv=(cus.serv)->clone();
+    }else 
+      serv=NULL;
+  }
+  return *this;
+  
+
+}
+
+void Customer::setservice(){
+  delete serv;
+  serv = ServiceFactory::create();
+}
+
+
+ 
+
+
+Customer::Customer(const Customer& cus){
+  /* this is not a shallow copy the assignment op will 
+     take care of business */
+
+  *this=cus;
+
+}
+
+
+void Customer::display(bool shortform) const{
+  cout<<"Id ,Name: "<<id<<", "<<name<<endl;
+  cout<<"Account Date:  ";
+  accountdate.display(shortform);
+  if (shortform==false){
+    cout<<"\n";
+    cout<<"Account Balance: ";
+    moneyDisplay(accountBalance);
+    cout<<seperater;
+    cout<<"Address:  "<<address<<endl;
+    cout<<"Phone: "<<phone<<endl;
+    serv->display();
+  }
+  if (shortform) cout<<"\n";
+
+}
+
+void Customer::write(ofstream& f)const{
+  f<<id<<seperater<<name; 
+  f<<seperater;
+  f<<address<<seperater;
+  f<<phone<<seperater;
+  accountdate.write(f);
+  serv->write(f);
+
+}
+
+
+
+void Customer::read(ifstream& f){
+  int m;
+  getline(f,id);
+  getline(f,name);
+  getline(f,address);
+  getline(f,phone);
+  accountdate.read(f);
+  nogap=accountdate;
+  f>>m;
+  delete serv;
+  serv=ServiceFactory::create(m);
+  serv->read(f);
+}
+
+
+
+void Customer::setCustomerId(){
+  
+  string temp;
+  cout<<"Customer Id: ";
+  getline(cin,temp);
+  while((temp.length()!=MAX)){
+    cout<<"Customer Id must be exactly 5 letter : ";
+    getline(cin,temp);
+  }
+  id=temp;
+}
+string Customer::getCustomerId() const{
+  return id;
+}
+
+void Customer::setPhone(){
+  cout<<"Customer phone: ";
+  phone=setPhoneString();
+}
+
+
+string Customer::getPhone() const{
+  return phone;
+}
+
+
+
+void Customer::setName(){
+  string temp;
+  cout<<"Customer Name: ";
+  getline(cin,temp);
+  while(temp.length()<1 || temp.length()>(8*MAX)){
+    cout<<"Customer name must not be empty or more than 40 letters: ";
+    getline(cin,temp);
+  }
+  name=temp;
+
+
+
+}
+ 
+string Customer::getName() const{
+  return name;
+}
+
+void Customer::setAddress(){
+  cout<<"Customer Address: ";
+  address=setAddrString();
+  
+}
+
+string Customer::getAddress() const{
+  return address;
+}
+void Customer::setAccountdate(){
+  cout<<"Account Date: ";
+  accountdate.set();
+}
+
+Date Customer::getAccountdate() const{
+  return accountdate;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transaction.h
+#ifndef _transaction_h
+#define _transaction_h
+#include "customerList.h"
+
+const int  TTCOUNT = 4;
+#define tab '\t'
+const int MAXEXTRA =100;
+const int MINEXTRA=25;
+
+enum Ttype {monthusecharge,extrafee,latecharge,payment};
+
+class Transaction{
+ public:
+  Transaction(){}
+  Transaction(Ttype);
+  virtual ~Transaction(){};
+  string gettcustomerid()const;
+  Date gettdate()const;
+  double gettamount()const;
+  Ttype getTType()const;
+  virtual Transaction& getobj()=0;
+  bool operator==(const Transaction& tr)
+  {return ((tcustomerid==tr.tcustomerid)&&(tdate==tr.tdate)&&
+	   (tamount=tr.tamount));}
+  virtual void set(CustomerList&);
+  virtual void display(bool shortform=true) const;
+  virtual void read(ifstream&);
+  virtual void write(ofstream&)const;
+  virtual Transaction* newTransaction()=0;
+  virtual Transaction* clone() = 0;
+  virtual void edit(const CustomerList& cl);
+ 
+
+ protected:
+  virtual void setTransAmt(const CustomerList&)=0;
+  void setAmt(double);
+  void setttype(Ttype);
+
+ private:
+  string tcustomerid;
+  Date tdate;
+  Ttype type;
+  double tamount;
+  void settdate(const CustomerList&);
+  void settcustomerid(const CustomerList&);
+
+};
+
+class TransactionFactory {
+ public:
+  static Transaction* create(CustomerList&);      
+  static Transaction* create(int tt);
+  static Transaction* create(Transaction* trp);
+  // silently constructs an object that is
+  // a copy of the object at the given address.
+  static string ttname[TTCOUNT] ;
+  static void displayTTypes();
+};
+
+
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transaction.cc
+#include "transaction.h"
+#include "transMonthlyUse.h"
+#include "transExtraFee.h"
+#include "transLateFee.h"
+#include "transPayment.h"
+
+
+Transaction* TransactionFactory::create(Transaction* trp){
+  if (trp==NULL) return NULL; 
+  else return trp->clone();
+}
+
+
+Transaction* TransactionFactory::create(CustomerList& cl){
+  int temp;
+  Transaction* tr;
+  cout<<"Please enter the type of transaction:\n";
+  TransactionFactory::displayTTypes();
+  cout<<"Enter Transaction Type : ";
+  temp=setInt();
+  while((temp<monthusecharge)||(temp>payment)){
+    cout<<"Please enter a correct choice\n";
+    TransactionFactory::displayTTypes();
+    cout<<"Enter Transaction Type : ";
+    temp=setInt();
+  }
+  
+  tr= create(temp);
+  tr->set(cl);
+  return tr;
+}
+
+Transaction* TransactionFactory::create(int tt){
+  if (tt==monthusecharge)
+      return new TransMonthlyUse(); 
+  else if (tt==extrafee)
+    return new TransExtraFee(); 
+  else if (tt==latecharge)
+    return new TransLateFee(); 
+  else
+    return new TransPayment(); 
+  
+
+}
+
+void Transaction::edit(const CustomerList& cl){
+  cout<<"Transaction Date: "<<tdate<<'\t'<<"::Change(y/n)?";
+  if (yes()) settdate(cl);
+  cout<<"Customer Id: "<<tcustomerid<<'\t'<<"::Change(y/n)?";
+  if (yes()) settcustomerid(cl);
+}
+
+
+
+void TransactionFactory::displayTTypes(){
+  cout<<'0'<<tab<<"Monthly Use Charge\n";
+  cout<<'1'<<tab<<"Extra Service Fee\n";
+  cout<<'2'<<tab<<"Late Fee\n";
+  cout<<'3'<<tab<<"Payment\n";
+
+}
+
+
+Transaction::Transaction(Ttype t1){
+  setttype(t1);
+}
+
+void Transaction::setttype(Ttype t1){
+  type=t1;
+}
+
+string Transaction::gettcustomerid()const{
+  return tcustomerid;
+}
+
+Date  Transaction::gettdate()const{
+  return tdate;
+}
+
+Ttype Transaction::getTType()const{
+  return type;
+}
+ 
+double Transaction::gettamount()const{
+  return tamount;
+}
+  
+
+void Transaction::set(CustomerList& l1){
+  settcustomerid(l1);
+  settdate(l1);
+}
+
+void  Transaction::display(bool shortform) const{
+  cout<<tcustomerid<<tab<<tdate<<tab;
+}
+
+void  Transaction:: read(ifstream& f){
+  f>>tcustomerid>>ws;
+  tdate.read(f);  
+}
+ 
+void  Transaction:: write(ofstream& f)const{
+  f<<type<<endl;
+  f<<tcustomerid<<endl;
+  tdate.write(f);
+}
+
+
+
+void  Transaction::setAmt(double d1){
+  tamount = d1;
+}
+
+
+
+void Transaction::settdate(const CustomerList& l1){
+  Date d;
+  cout<<"Enter the transaction date. \n";
+  tdate.set();
+  d=l1[tcustomerid].getAccountdate();
+  while(tdate<d){
+    cout<<"The Transaction date cannot be earlier than "<<d<<endl;
+    tdate.set();
+  }
+}
+
+void Transaction::settcustomerid(const CustomerList& l1){
+  string str,strid;
+  cout<<"Enter the first few characters of the customer's name: ";
+  getline(cin,str);
+  strid=l1.findid(str);
+  while(strid=="not found"){
+    cout<<strid<<endl;
+    cout<<"Enter the first few characters of the customer's name: ";
+    getline(cin,str);
+    strid=l1.findid(str);
+  }
+  tcustomerid=strid;
+
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transMonthlyUse.h
+#ifndef _transMonthlyUse_h
+#define _transMonthlyUse_h
+#include "transaction.h"
+
+class TransMonthlyUse : public Transaction {
+ public:
+  TransMonthlyUse();
+  virtual ~TransMonthlyUse(){}
+  void set(CustomerList&);
+  void display(bool shortform=true)const;
+  void write(ofstream&)const;
+  void read(ifstream&);
+  Date getstart()const;
+  Date getend()const;
+  bool operator==(TransMonthlyUse& trl){
+    return (Transaction::operator==(trl) && start==trl.start
+	    && end==trl.end);}
+  TransMonthlyUse* newTransaction() {return new TransMonthlyUse;}
+  TransMonthlyUse* clone() {return new TransMonthlyUse(*this);}
+  TransMonthlyUse& getobj(){return *this;}
+  void edit(const CustomerList& cl);
+  void setstart(CustomerList& l1);
+  void setend(CustomerList& l1);
+
+ private:
+  Date start;
+  Date end;
+  void setTransAmt(const CustomerList&);
+};
+
+
+
+
+#endif
+
+
+[haj@f431-02 cfiles]$ cat transmonthlyuse.cc
+#include "transMonthlyUse.h"
+
+
+TransMonthlyUse::TransMonthlyUse(){
+  setttype(monthusecharge);
+}
+
+void TransMonthlyUse::edit(const CustomerList& cl){
+  Transaction::edit(cl);
+  cout<<"Usage fee for the period "<<start<<" - "<<end<<": ";
+  setTransAmt(cl);
+  moneyDisplay(Transaction::gettamount());
+  cout<<"\n";
+}
+
+void TransMonthlyUse::set(CustomerList& l1){
+  Transaction::set(l1);
+  setstart(l1);
+  setend(l1);
+  cout<<"Usage fee for the period "<<start<<" - "<<end<<": ";
+  setTransAmt(l1);
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+ 
+}
+
+void TransMonthlyUse::display(bool shortform)const{
+  Transaction::display();
+  cout<<"Monthly Use Charge\t";
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+  cout<<"Usage fee for period ";
+  start.display();
+  cout<<" - " ;
+  end.display();
+  cout<<": ";
+  moneyDisplay(Transaction::gettamount());
+  cout <<endl;
+  
+}
+
+void TransMonthlyUse::write(ofstream& f)const{
+
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+  start.write(f);
+  end.write(f);
+  
+}
+
+void TransMonthlyUse::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1;
+  Transaction::setAmt(d1);
+  start.read(f);
+  end.read(f);
+}
+
+Date TransMonthlyUse::getstart()const{
+  return start;
+}
+
+Date TransMonthlyUse::getend()const{
+  return end;
+}
+
+void TransMonthlyUse::setTransAmt(const CustomerList& l1){
+  setAmt(l1[Transaction::gettcustomerid()].calculateCharges(start,end));
+}
+
+void TransMonthlyUse::setstart(CustomerList& l1){
+  start=l1[Transaction::gettcustomerid()].nogap;
+}
+	 
+
+void TransMonthlyUse::setend(CustomerList& cl){
+ 
+  end=start+28;
+  while(!(start.areinsameday(end)))
+      end+=1;
+  cl.fixnogap(end+1,gettcustomerid());
+  
+}
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transExtraFee, .h
+#ifndef _transExtraFee_h
+#define _transExtraFee_h
+
+#include "transaction.h"
+
+class TransExtraFee : public Transaction {
+ public: 
+  TransExtraFee();
+  virtual ~TransExtraFee(){}
+  void set(CustomerList&);
+  void read(ifstream&);
+  void write(ofstream&)const;
+  void display(bool shortform=true)const;
+  bool operator==(TransExtraFee& trl){
+    return (Transaction::operator==(trl) && servicedate==trl.servicedate
+            && description==trl.description);}
+  string getdescription()const;
+  Date getservicedate()const;
+  TransExtraFee* newTransaction() {return new TransExtraFee;}
+  TransExtraFee* clone() {return new TransExtraFee(*this);}
+  TransExtraFee& getobj(){return *this;}
+  void edit(const CustomerList& cl);
+  
+ private:
+  Date servicedate;
+  string description;
+  void setservicedate(const CustomerList& l1);
+  void setdescription();
+  void setTransAmt(const CustomerList&);
+  
+};
+
+
+
+#endif
+
+
+
+[haj@f431-02 cfiles]$ cat transextrafee.cc
+#include "transExtraFee.h"
+
+TransExtraFee::TransExtraFee(){
+  setttype(extrafee);
+
+}
+
+void TransExtraFee::edit(const CustomerList& cl){
+  Transaction::edit(cl);
+  cout<<"Service Date: "<<servicedate<<'\t'<<"::Change(y/n)? ";
+  if (yes()) setservicedate(cl);
+  cout<<"Service Description: "<<description<<'\t'<<"::Change(y/n)? ";
+  if (yes()) setdescription();
+  cout<<"Transaction Amount :"<<gettamount()<<'\t'<<"::changed?(Y/N) ";
+  if (yes()) setTransAmt(cl);
+}
+
+void TransExtraFee::set(CustomerList& l1){
+  Transaction::set(l1);
+  setTransAmt(l1);
+  setservicedate(l1);
+  setdescription();
+}
+
+void TransExtraFee::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1;
+  Transaction::setAmt(d1);
+  servicedate.read(f);
+  f>>ws;
+  getline(f,description);
+
+}
+void TransExtraFee::write(ofstream& f)const{
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+  servicedate.write(f);
+  f<<description<<endl;
+
+
+}
+void TransExtraFee::display(bool shortform)const{
+  Transaction::display();
+  cout<<"Extra Service Fee\t";
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+  cout<<"Service Date: ";
+  servicedate.display();
+  cout<<endl;
+  cout<<"Service Description: "<<description<<endl;
+  
+}
+string TransExtraFee::getdescription()const{
+  return description;
+
+}
+Date TransExtraFee::getservicedate()const{
+  return servicedate;
+
+}
+void TransExtraFee::setservicedate(const CustomerList& l1){
+  Date d;
+  cout<<"Enter the date of this extra service: ";
+  servicedate.set();
+  d=l1[gettcustomerid()].getAccountdate();
+  while (servicedate<d){
+    cout<<"The Service date cannot be earlier than "<<d<<endl;
+    servicedate.set();
+  }
+}
+
+void TransExtraFee::setdescription(){
+  cout <<"Enter a brief description of the service:";
+  getline(cin,description);
+
+}
+
+void TransExtraFee::setTransAmt(const CustomerList& l1){
+  double d1;
+  cout <<"Enter the charge for this extra service: ";
+  d1=setReal();
+  while((d1<MINEXTRA)||(d1>MAXEXTRA)){
+    cout<<"Charge must be between $"<<MINEXTRA
+	<<"and $"<<MAXEXTRA<<".please try again.\n";
+    d1=setReal();
+  }
+  setAmt(d1);
+
+}
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat tre ansLateFee.h
+#ifndef _transLateFee_h
+#define _transLateFee_h
+#include "transaction.h"
+
+class TransLateFee : public Transaction {
+ public:
+  TransLateFee();
+  virtual ~TransLateFee(){}
+  void set(CustomerList&);
+  void display(bool shortform=true)const;
+  void write(ofstream&)const;
+  void read(ifstream&);
+  bool operator==(TransLateFee& trl){
+    return (Transaction::operator==(trl) && due==trl.due
+            );}
+  Date getdue()const;
+  double getlate()const;
+  TransLateFee* newTransaction() {return new TransLateFee;}
+  TransLateFee* clone() {return new TransLateFee(*this);}
+  TransLateFee& getobj(){return *this;}
+  void edit(const CustomerList& cl);
+
+
+ private:
+  Date due;
+  static double late ;
+  void setTransAmt(const CustomerList&);
+  void setdue(const CustomerList& l1);
+};
+
+
+#endif
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat translatefee.cc
+#include "transLateFee.h"
+
+double TransLateFee::late=25;
+
+TransLateFee::TransLateFee(){
+  setttype(latecharge);
+}
+
+void TransLateFee::edit(const CustomerList& cl){
+  Transaction::edit(cl);
+  cout<<"Due Date: "<<due<<'\t'<<"::Change(y/n)? ";
+  if (yes()) setdue(cl);
+  setAmt(late);
+}
+
+void TransLateFee::set(CustomerList& l1){
+  Transaction::set(l1);
+  setdue(l1);
+  cout<<"Transaction amount set to ";
+  moneyDisplay(late);
+  setAmt(late);
+  cout<<endl;
+}
+void TransLateFee::setdue(const CustomerList& l1){
+  Date d;
+  cout<<"Enter the due date :";
+  due.set();
+  d=l1[gettcustomerid()].getAccountdate();
+  while(due<d){
+    cout<<"Due date cannot be earlier than "<<d<<endl;
+    due.set();
+  }
+}
+
+void TransLateFee::display(bool shortform)const{
+  Transaction::display();
+  cout<<"Late Fee\t";
+  moneyDisplay(late);
+  cout<<endl;
+  cout<<"Due Date: ";
+  due.display();
+  cout<<tab<<"Late Fee:  ";
+  moneyDisplay(late);
+  cout<<endl ;
+
+}
+
+void TransLateFee::write(ofstream& f)const{
+  Transaction::write(f);
+  f<<late<<endl;
+  due.write(f);
+  
+}
+
+void TransLateFee::read(ifstream& f){
+  Transaction::read(f);
+  f>>late;
+  setAmt(late);
+  due.read(f);
+}
+
+Date TransLateFee::getdue()const{
+  return due;
+
+}
+double TransLateFee::getlate()const{
+  return late;
+}
+
+void TransLateFee::setTransAmt(const CustomerList&){
+  
+
+}
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat transPayment.h
+#ifndef _transPayment_h
+#define _transPayment_h
+#include "transaction.h" 
+
+class TransPayment : public Transaction {
+ public:
+  TransPayment();
+  virtual ~TransPayment(){}
+  void set(CustomerList&);
+  void display(bool shortform=true)const;
+  void read(ifstream&);
+  void write(ofstream&)const;
+  bool operator==(TransPayment& trl){
+    return (Transaction::operator==(trl));}
+  TransPayment* newTransaction() {return new TransPayment;}
+  TransPayment* clone() {return new TransPayment(*this);}
+  TransPayment& getobj(){return *this;}
+  void edit(const CustomerList& cl);
+
+
+
+ private:
+  void setTransAmt(const CustomerList&);
+};
+
+
+#endif 
+
+[haj@f431-02 cfiles]$ cat transpayment.cc
+#include "transPayment.h"
+
+TransPayment::TransPayment(){
+  setttype(payment);
+}
+
+void TransPayment::edit(const CustomerList& cl){
+  Transaction::edit(cl);
+  cout<<"Transaction payment: "<<gettamount()<<'\t'<<"change?(Y/N) "<<endl;
+  if (yes()) setTransAmt(cl);
+}
+
+void TransPayment::set(CustomerList& l1){
+  Transaction::set(l1);
+  setTransAmt(l1);
+}
+
+void TransPayment::display(bool shortform)const{
+  Transaction::display();
+  cout<<"Payment amount: ";
+  moneyDisplay(Transaction::gettamount());
+  cout<<endl;
+
+}
+
+void TransPayment::read(ifstream& f){
+  double d1;
+  Transaction::read(f);
+  f>>d1>>ws;
+  setAmt(d1);
+}
+
+void TransPayment::write(ofstream& f)const{
+  Transaction::write(f);
+  f<<Transaction::gettamount()<<endl;
+
+}
+
+
+void TransPayment::setTransAmt(const CustomerList&){
+  double d1;
+  cout<<"Enter the payment amount: ";
+  d1=setReal();
+  cout<<"Transaction amount set to $"<<-d1<<endl;
+  setAmt(-d1);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat service.h
+/* Maan Haj Rachid
+   11:00pm 10/10/01
+*/
+
+#ifndef _service_h
+#define _service_h
+#include <fstream.h>
+#include "date.h"
+#include "utility.h"
+
+enum ServiceT {dialup,dsl};
+const double Mindr = 0.25;  //min daily rate
+const double Maxdr= 3.00;  //max daily rate
+#define seperater '\n'
+const double Wsmin = 3;    //web space min
+const double Wsmax = 30;   //web space max
+const double Infeemin= 0;   //min installation fee
+const double Infeemax =200;  //max installation fee
+
+
+
+class Service {
+ public:
+  ServiceT getSType() const;
+  double getdailyrate()const;
+  virtual void display(bool shortform=true)const;
+  virtual void set();
+  virtual void read(ifstream&);
+  virtual void write(ofstream&)const{}
+  virtual double calculateCharges(Date d1, Date d2)=0;
+  virtual Service* newService()=0;
+  virtual Service* clone()=0;
+  virtual void edit();
+
+ protected:
+  void setservicetype(ServiceT);
+  void setdailyrate(double dr);
+  void setdailyrate();
+
+ private:
+  ServiceT serviceType;
+  double dailyRate;
+ 
+};
+
+
+class ServiceFactory {
+ public:
+  static Service* create();         // interactively determine which kind
+  // of object is needed and then constructs 
+  // one in dynamic memory.
+  static void displayTypes();
+  static Service* create(int st);  // silently constructs an object based on
+  // its serviceType.
+};
+
+
+
+
+#endif
+
+
+[haj@f431-02 cfiles]$ cat service.cc
+#include "service.h"
+#include "dialup.h"
+#include "dsl.h"
+
+void ServiceFactory::displayTypes(){
+  cout<<"Enter "<<dialup<<" For dial up and "<<dsl<<" for DSL:";
+}
+Service* ServiceFactory::create(){
+  int temp;
+  Service* s1;
+  do{
+    ServiceFactory::displayTypes();
+    temp=setInt();
+  }while(temp!=0 && temp!=1);
+  s1= create(temp);
+  s1->set();
+  return s1;
+}
+      
+Service* ServiceFactory::create(int s1){
+  DialupService dus1;
+  DSLService dsl1;
+  if (s1==1)
+    return dsl1.newService();
+  else
+    return dus1.newService();
+}
+
+void Service::edit(){
+  ServiceFactory::displayTypes();
+  set();
+}
+
+void Service::display(bool shortform)const{
+  cout<<"Service Type: ";
+  if (serviceType) cout<<"DSL"; 
+  else cout <<"Dialup";  
+  cout<<'\t';
+  cout<<"Daily Rate: ";
+  moneyDisplay(dailyRate,true);
+}
+
+void Service::set(){
+  cout<<"Daily Rate: ";
+  dailyRate=setReal();
+  while(dailyRate<Mindr || dailyRate>Maxdr){
+    cout<<"Daily rate must be between$"
+	<<Mindr<<" and $"<<Maxdr<<".Please try again.\n";
+    cout<<"Daily Rate: ";
+    dailyRate=setReal();
+  }
+  
+}
+
+void Service::read(ifstream& f){
+  
+  f>>dailyRate; 
+}
+
+ServiceT Service::getSType() const{
+  return serviceType;
+}
+
+void Service::setdailyrate(){
+  cout<<"Daily Rate: ";
+  dailyRate=setReal();
+  while(dailyRate<Mindr || dailyRate>Maxdr){
+    cout<<"Daily rate must be between$"
+	<<Mindr<<" and $"<<Maxdr<<".Please try again.\n";
+    cout<<"Daily Rate: ";
+    dailyRate=setReal();
+  }
+  
+}
+
+void Service::setservicetype(ServiceT ser){
+  serviceType=ser;
+}
+
+
+
+double Service::getdailyrate()const{
+  return dailyRate;
+}
+
+
+void Service::setdailyrate(double dr){
+  dailyRate=dr;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat dialup.h
+#ifndef _dialup_h
+#define _dialup_h
+#include "service.h"
+
+class DialupService : public Service {
+ public:
+  DialupService();
+  void display(bool shortform=true)const;
+  void set();
+  void read(ifstream&);
+  void write(ofstream&)const;
+  double calculateCharges(Date d1,Date d2);
+  DialupService* newService() {return new DialupService;}
+  DialupService* clone() {return new DialupService(*this);}
+  void edit();
+
+ private:
+  int webSpaceLimit;
+  void setwebspace();
+};
+
+
+#endif
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat dil aly up.cc
+#include "dialup.h"
+
+
+
+DialupService::DialupService(){
+  setservicetype(dialup);
+}
+
+void DialupService::edit(){
+  Service::edit();
+  cout<<"Web space Limit: "<<webSpaceLimit<<" MB"<<'\t'
+      << ":: Change (y/n)? ";
+  if (yes()) setwebspace();
+}
+
+void DialupService::display(bool shortform)const{
+  Service::display();
+  cout<<"Web space Limit: "<<webSpaceLimit<<" MB\n";
+}
+
+void DialupService::setwebspace(){
+  cout<<"Web space Limit (in MB): ";
+  webSpaceLimit=setInt();
+  while(webSpaceLimit<Wsmin || webSpaceLimit>Wsmax){
+    cout<<"Web space limit must be between 3 and 30.  Please try again.\n";
+    cout<<"Web space Limit (in MB): ";
+    webSpaceLimit=setInt();
+  }
+}
+
+void DialupService::set(){
+  Service::set();
+  setwebspace();
+
+}
+
+void DialupService::read(ifstream& f){
+  string str;
+  Service::read(f);
+  f>>webSpaceLimit;
+  getline(f,str);
+}
+
+void DialupService::write(ofstream& f)const{
+  f<<dialup<<seperater;
+  f<<getdailyrate()<<seperater<<webSpaceLimit<<seperater;
+}
+
+double DialupService::calculateCharges(Date d1,Date d2){
+  return ((d2-d1)*getdailyrate());
+}
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat dsl.h
+#ifndef _dsl_h
+#define _dsl_h
+#include "service.h"
+
+class DSLService : public Service{
+ public:
+  DSLService();
+  void display(bool shortform=true)const;
+  void set();
+  void read(ifstream&);
+  void write(ofstream&)const;
+  double calculateCharges(Date d1,Date d2);
+  DSLService* newService() {return new DSLService;}
+  DSLService* clone() {return new DSLService(*this);}
+  void edit();
+
+ private:
+  double installationFee;
+  int ipAddressCount;
+  void setipcount();
+  void setinstallfee();
+};
+
+#endif
+
+
+
+
+[haj@f431-02 cfiles]$ cat dsl.cc
+#include "dsl.h"
+
+DSLService::DSLService(){
+  setservicetype(dsl);
+}
+
+void DSLService::setinstallfee(){
+  cout<<"Installation fee: ";
+  installationFee=setReal();
+  while(installationFee< Infeemin || installationFee>Infeemax){
+    cout<<"installation fee must be between $"
+        <<Infeemin<<" and $"<<Infeemax<<" .Please try again.\n";
+    installationFee=setReal();
+  }
+}
+
+void DSLService::setipcount(){
+  cout<<"Number of fixed IP addresses: ";
+  ipAddressCount=setInt();
+  while(ipAddressCount<1 || ipAddressCount>20){
+    cout<<"Number of fixed IP addresses must be between 1 and 20.\n";
+    cout<<"please try again.\n";
+    cout<<"Number of fixed IP addresses: ";
+    ipAddressCount=setInt();
+  }
+}
+
+void DSLService::edit(){
+  Service::edit();
+  cout<<"Installation Fee: "<<installationFee<<'\t'<<"Change (y/n)? ";
+  if (yes()) setinstallfee();
+  cout<<"Number of fixed IP addresses: "<<ipAddressCount<<'\t'
+      <<":: Change (y/n)?";
+  if (yes()) setipcount();
+}
+
+void DSLService::display(bool shortform)const{
+  Service::display();
+  cout<<"installation Fee: ";
+  moneyDisplay(installationFee,true);
+  cout<<"Number of fixed IP addresses: "<<ipAddressCount<<endl;
+}
+
+void DSLService::set(){
+  Service::set();
+  setinstallfee(); 
+  setipcount();
+
+}
+
+
+
+void DSLService::read(ifstream& f){
+  string str;
+  Service::read(f);
+  f>>installationFee;
+  f>>ipAddressCount;
+  getline(f,str);
+	  
+ 
+
+}
+
+void DSLService::write(ofstream& f)const{
+  f<<dsl<<seperater;
+  f<<getdailyrate()<<seperater<<installationFee<<seperater<<ipAddressCount;
+  f<<seperater;
+}
+
+double DSLService::calculateCharges(Date d1,Date d2){
+  return ((d2-d1)*ipAddressCount*getdailyrate());
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ cat dt ate.h
+// File: date.h
+// A simple implementation of a date class.
+
+#ifndef _DATE_H_
+#define _DATE_H_
+#include <fstream>
+#include <string>   // stl string class
+#include <cstdlib>  // for atoi
+#include <time.h>
+#include "utility.h"
+const  char sep = '\n';
+
+using namespace std;
+
+class Date {
+ public:
+  friend ostream& operator<<(ostream& out, const Date& d) 
+    { d.display();   return out; }
+  friend istream& operator>>(istream& in, Date& d)
+    { d.set();   return in; }
+  Date();  // default constructor initializes host obj to  base date.
+  Date(int m, int d, int y);  // constructs Date from month/day/year
+  void write(ofstream&)const;
+  void read(ifstream&);
+  void set();  // interactively sets data for host obj from keyboard
+  bool set(int m, int d, int y); // sets host object from args if valid.
+  void display(bool shortform = true) const;  // displays the host object
+  bool operator<(const Date& d) const;   // comparison: host < d
+  bool operator==(const Date& d) const; // comparison: host == d
+  bool operator<=(const Date& d) const; // comparison: host <= d
+  int  operator-(const Date& d) const; // computes number of days (host - d)
+  Date operator+(int days) const;        // computes the date (host + days)
+  void operator+=(int days);               // changes host to (host + days)
+  bool areinsameday(const Date& d1)const;
+  
+ private:
+  long dsb;    // days since base date
+  Date(long days);     // private constructor creates Date from dsb
+  void set_dsb (int month, int day, int year); // computes dsb
+  void get_mdy (int& m, int& d, int& y) const; //computes m/d/y from dsb
+  static int base_year; 
+  static bool leapyear(int year);
+  static int yeardays(int year);
+  static int monthdays(int month, int year);
+  static string monthname(int month);
+};
+
+#endif
+
+
+[haj@f431-02 cfiles]$ cat date.cc
+/* Maan Haj Rachid
+   9/23/01
+   Date library */
+
+/* This library allow to use dates in appropriate way . it store the date as 
+   a single integer that represent the number of days since dec 31 999 . */ 
+
+#include <fstream>
+
+#include "utility.h"
+#include "date.h"
+using namespace std;
+
+
+int Date::base_year= 1000;
+
+
+bool Date::areinsameday(const Date& d1)const{
+  int m1,day1,y1,m2,day2,y2;
+  d1.get_mdy(m1,day1,y1);
+  get_mdy(m2,day2,y2);
+  return(day1==day2);
+}
+
+
+Date::Date(){      
+  dsb=1;
+}
+
+Date::Date(int m, int d, int y){ 
+  set_dsb(m,d,y);
+}
+
+void Date::write(ofstream& f)const{
+  
+  f<<dsb<<sep;
+}
+
+
+void Date::read(ifstream& i){
+  i>>dsb;
+
+
+}
+
+
+
+
+void Date::set(){     //get the y/m/d from the user
+  int year,month,day,checkday;
+  
+  
+  do {
+    cout<<"Year: ";
+    year=setInt();
+    if (year<1000)
+      cout<<"Year must not be earlier than 1000. Please try again."<<endl;
+  }while (year<1000); 
+  
+  do {
+    cout<<"Month (a number from 1 to 12): ";
+    month=setInt();
+    if (month>12 || month<1)
+      cout<<"Invalid month! Please try again."<<endl;
+  }while (month>12 || month<1);
+  
+  do {
+    cout<<"Day of the month: ";
+    day=setInt();
+    checkday=monthdays(month,year);
+    if (day>checkday || day<1)
+      cout<<"Invalid day! Please try again."<<endl;
+  }while (day>checkday || day<1);  
+  
+
+
+  set(month,day,year);
+  
+
+}
+
+
+bool Date::set(int m, int d, int y){ //set the date by the programmer 
+  
+  if (m>0 && m<13 && y>base_year-1 &&d>0){
+    if (d<=monthdays(m,y)){
+      set_dsb(m,d,y);
+      return true;
+    }
+  }
+ 
+    return false;
+
+} 
+
+
+// display the date in the form determined by shortform
+void Date::display (bool shortform) const{ 
+  int month;
+  int day;
+  int year;
+  string y;
+  
+  char sl='/';
+  get_mdy(month,day,year);
+  if (shortform==true)
+    cout<<month<<sl<<day<<sl<<year;
+  else
+    cout<<monthname(month)<<' '<<day<<','<<' '<< year;
+
+}
+
+bool Date::operator<(const Date& d) const{
+  return (dsb<d.dsb);
+}
+
+bool Date::operator==(const Date& d) const{
+  return (dsb==d.dsb);
+}
+
+bool Date::operator<=(const Date& d) const{
+  return(dsb<=d.dsb);
+}
+
+int Date::operator-(const Date& d)const {
+  return (dsb-d.dsb);  //negative results are allowed
+    
+}
+
+
+Date Date::operator+(int days) const{
+  Date temp(dsb+days);
+  return temp;
+}
+
+void Date::operator+=(int days){
+  dsb+=days;
+  if (dsb<1)
+    dsb=1;     // when dsb is negative goto base
+}
+
+Date::Date(long days){ 
+  if (days>0)
+    dsb=days;  
+  else
+    dsb=1;    // when dsb is negative goto base
+}
+ 
+
+bool Date::leapyear(int year){ 
+  
+  return (((year%4==0) && (year%100!=0)) 
+	  || (year%400==0));
+}
+
+int Date::yeardays(int year){
+  if (leapyear(year))
+    return 366;
+  else
+    return 365;
+}
+
+int Date::monthdays(int month, int year){
+  if (month==2){
+    if (leapyear(year))
+      return 29;
+    else
+      return 28;
+  }else if (month==1 || month==3 || month
+	    ==5 || month==7 || month==8
+	    || month==10 || month==12)
+    return 31;
+  else 
+    return 30;
+  
+}
+
+
+string Date::monthname(int month){
+
+  switch (month) {
+  case 1:
+    return "January";
+  case 2:
+    return "February";
+  case 3:
+    return "March";
+  case 4:
+    return "April";
+  case 5:
+    return "May";
+  case 6:
+    return "June";
+  case 7:
+    return "July";
+  case 8:
+    return "August";
+  case 9:
+    return "September";
+  case 10:
+    return "October";
+  case 11:
+    return "November";
+  case 12:
+    return "December";  // no other case can be given     
+  }
+
+  return "";
+}  
+
+// this function will convert the date to an integer 
+void Date::set_dsb (int month, int day, int year){
+  int n;
+  dsb=0;
+  for(n=base_year;n<year;n++){
+    dsb+=yeardays(n);
+  }
+
+  for(n=1;n<month;n++){
+    dsb+=monthdays(n,year);
+  }
+  dsb+=day;
+}
+
+
+// this function will take care of finding year,day,and month
+//of a given integer
+void Date::get_mdy (int& m, int& d, int& y) const{
+  int n=1;
+  m=1;
+  d=1;
+  y=base_year;
+
+ 
+  while(n<dsb){
+    n+=yeardays(y);   //get the years 
+    y++;
+  }
+  
+  if (n==dsb) return;
+  else {
+    y--;   //if n>dsb that mean the previous year is the one
+    m=12;
+    while(n>dsb){
+      n-=monthdays(m,y);   // get the month
+      m--;
+    }
+  }
+  
+  m++;     
+
+  if (n<dsb){
+    d=dsb-n+1;   //get the day
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+[haj@f431-02 cfiles]$ g ls
+[00m[00m#clf#[00m                 [00mdate.h~[00m      [00mmaan.c~[00m             [00mtransPayment.h[00m
+[00m#cutsomerList.h#[00m      [00mdemo6.cc~[00m    [00mmaan1[00m               [00mtransPayment.h~[00m
+[00m#hw7TLfile#[00m           [00mdialup.cc[00m    [00mmaan2[00m               [00mtransaction.cc[00m
+[00m#option#[00m              [00mdialup.cc~[00m   [00mmaancuslist[00m         [00mtransaction.cc~[00m
+[00m#transmonthlyfee.cc#[00m  [00mdialup.h[00m     [00mmancuslist[00m          [00mtransaction.h[00m
+[00m#utility.cc#[00m          [00mdialup.h~[00m    [00mmantranlist[00m         [00mtransaction.h~[00m
+[01;32ma.out[00m*                [00mdsl.cc[00m       [00moption.cc[00m           [00mtransactionList.h[00m
+[00mclf[00m                   [00mdsl.cc~[00m      [00moption.cc~[00m          [00mtransactionList.h~[00m
+[00mclf~[00m                  [00mdsl.h[00m        [00moption.h[00m            [00mtransactionlist.cc[00m
+[00mcore[00m                  [00mdsl.h~[00m       [00moption.h~[00m           [00mtransactionlist.cc~[00m
+[00mcustomer.cc[00m           [00mhw6[00m          [00mservice.cc[00m          [00mtransextrafee.cc[00m
+[00mcustomer.cc~[00m          [00mhw6~[00m         [00mservice.cc~[00m         [00mtransextrafee.cc~[00m
+[00mcustomer.h[00m            [00mhw7[00m          [00mservice.h[00m           [00mtranslatefee.cc[00m
+[00mcustomer.h~[00m           [00mhw7CLfile[00m    [00mservice.h~[00m          [00mtranslatefee.cc~[00m
+[00mcustomerList.h[00m        [00mhw7TLfile[00m    [00mtl[00m                  [00mtransmonthlyuse.cc[00m
+[00mcustomerList.h~[00m       [00mhw7demo.cc~[00m  [00mtlf[00m                 [00mtransmonthlyuse.cc~[00m
+[00mcustomerlist.cc[00m       [00mhw7~[00m         [00mtlf~[00m                [00mtranspayment.cc[00m
+[00mcustomerlist.cc~[00m      [00mhw8[00m          [00mtl~[00m                 [00mtranspayment.cc~[00m
+[00mdata[00m                  [00mhw8demo.cc[00m   [00mtransExtraFee.h[00m     [00mutility.cc[00m
+[00mdata1[00m                 [00mhw8~[00m         [00mtransExtraFee.h~[00m    [00mutility.cc~[00m
+[00mdata~[00m                 [00mhw9[00m          [00mtransLateFee.h[00m      [00mutility.h[00m
+[00mdate.cc[00m               [00mkjsfksdjf[00m    [00mtransLateFee.h~[00m     [00mzzz[00m
+[00mdate.cc~[00m              [00mmaan[00m         [00mtransMonthlyUse.h[00m   [00mzzz1[00m
+[00mdate.h[00m                [00mmaan.c[00m       [00mtransMonthlyUse.h~[00m
+[m[haj@f431-02 cfiles]$ g++ -ansi -pedantic -Wall *.cc
+[haj@f431-02 cfiles]$ a.out
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 0
+Read Customer List
+Name of the file to be read:  clf
+Reading file clf ...
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 0
+Read Customer List
+Name of the file to be read:  clf
+Reading file clf ...
+*** There are already 4 Customers in the list.
+Do you want to keep the old data in the Customer list? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 13131, Polly Morphism
+Account Date:  January 1, 2001
+Account Balance: $0.00
+Address:  111 First Street; Apt 4; Pleasantville; MI; 38383
+Phone: (123)234-3456
+Service Type: DSL	Daily Rate: $0.80
+installation Fee: $100.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 24242, Stan Template
+Account Date:  February 1, 2001
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (142)536-4759
+Service Type: Dialup	Daily Rate: $0.25
+Web space Limit: 12 MB
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $0.00
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $0.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 0
+Read Customer List
+Name of the file to be read:  y clf
+Reading file clf ...
+*** There are already 4 Customers in the list.
+Do you want to keep the old data in the Customer list? y
+The customer with ID 13131 found.
+Polly Morphism	  1/1/2001
+Ok to replace(Y/N)? y
+The customer with ID 24242 found.
+Stan Template	  2/1/2001
+Ok to replace(Y/N)? y
+The customer with ID 48484 found.
+Parsley Error	  3/1/2001
+Ok to replace(Y/N)? n
+The customer with ID 98989 found.
+Sam Mantic	  4/1/2001
+Ok to replace(Y/N)? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? y
+Enter Customer ID (or "All") All
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+-----------------
+Id ,Name: 24242, Stan Template
+Account Date:  2/1/2001
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 1
+Add Customers
+Customer Id: 20000
+Customer Name: Maan Haj
+Customer Address: Address is entered in the order:
+	First address line
+	Second address line (if necessary)
+	City
+	State (abbreviation)
+	Zip code
+First address line: 54 Mountain ave #16
+Second address line: Malden
+City: Ma
+State (2 char abbrev): 02134
+State (2 char abbrev): 23
+Zip code (5) digits): 02134
+Customer phone: Enter phone number as a 10-digit string: 2030202010
+Account Date: Year: 2000
+Month (a number from 1 to 12): 6
+Day of the month: 12
+Enter 0 For dial up and 1 for DSL:0
+Daily Rate: 2
+Web space Limit (in MB): 3
+---------------
+Not in list yet ....
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $0.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+map size so far is: 5
+Another customer (Y/N)?n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 3 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") 20000
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $0.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 3
+Find Customer
+Enter the first few characters of the customer's name:P
+Name: Polly Morphism	ID: 13131? n
+Name: Parsley Error	ID: 48484? y
+Requested Customer ID is:48484
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 3
+Find Customer
+Enter the first few characters of the customer's name:P
+Name: Polly Morphism	ID: 13131? n
+Name: Parsley Error	ID: 48484? n
+P not found
+Requested Customer ID is:NOT FOUND
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 4
+Edit Customer
+Enter the first few characters of the customer's name:P S
+Name: Stan Template	ID: 24242? y
+Name: Stan Template	:: Change (y/n)? y
+Customer Name: Mazen
+Address: 222 Second Street; Suite 8; Blue Sky; PA; 93939	:: Change (y/n)? Alepp,Syria ^[[D           o ,Syria
+Phone: (142)536-4759	:: Change (y/n)? y
+Customer phone: Enter phone number as a 10-digit string: 3020201020
+Account Date: 2/1/2001	:: Change (y/n)? y
+Account Date: Year: 2000
+Month (a number from 1 to 12): 9
+Day of the month: 3
+Change Service(y/n)? y
+Enter 0 For dial up and 1 for DSL:1
+Daily Rate: 2.5
+Installation fee: 20
+Number of fixed IP addresses: 30
+Number of fixed IP addresses must be between 1 and 20.
+please try again.
+Number of fixed IP addresses: 10
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? A n
+Enter Customer ID (or "All") All
+Id ,Name: 13131, Polly Morphism
+Account Date:  January 1, 2001
+Account Balance: $0.00
+Address:  111 First Street; Apt 4; Pleasantville; MI; 38383
+Phone: (123)234-3456
+Service Type: DSL	Daily Rate: $0.80
+installation Fee: $100.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $0.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+-----------------
+Id ,Name: 24242, Mazen
+Account Date:  September 3, 2000
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (302)020-1020
+Service Type: DSL	Daily Rate: $2.50
+installation Fee: $20.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $0.00
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $0.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 5
+Remove Customer
+Enter the first few characters of the customer's name:P
+Name: Polly Morphism	ID: 13131? y
+Id ,Name: 13131, Polly Morphism
+Account Date:  January 1, 2001
+Account Balance: $0.00
+Address:  111 First Street; Apt 4; Pleasantville; MI; 38383
+Phone: (123)234-3456
+Service Type: DSL	Daily Rate: $0.80
+installation Fee: $100.00
+Number of fixed IP addresses: 10
+Are you sure that you want to remove this Customer (y/n)? y
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 6 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $0.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+-----------------
+Id ,Name: 24242, Mazen
+Account Date:  September 3, 2000
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (302)020-1020
+Service Type: DSL	Daily Rate: $2.50
+installation Fee: $20.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $0.00
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $0.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 7
+Read Transaction List
+Name of the file to be read:  tlf
+Reading file tlf ...
+20000 has no Transactions.
+24242 has no Transactions.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 7
+Read Transaction List
+Name of the file to be read:  tlf
+Reading file tlf ...
+Do you want to keep old data? y
+20000 has no Transactions.
+24242 has no Transactions.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 7
+Read Transaction List
+Name of the file to be read:  tlf
+Reading file tlf ...
+Do you want to keep old data? n
+20000 has no Transactions.
+24242 has no Transactions.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 8
+Add transactions
+Please enter the type of transaction:
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type : 3
+Enter the first few characters of the customer's name: P
+Name: Parsley Error	ID: 48484? n
+not found
+Enter the first few characters of the customer's name: F S
+Name: Sam Mantic	ID: 98989? y
+Enter the transaction date. 
+Year: 2000
+Month (a number from 1 to 12): 3
+Day of the month: 2
+The Transaction date cannot be earlier than 4/1/2001
+Year: 2003
+Month (a number from 1 to 12): 2
+Day of the month: 3
+Enter the payment amount: 200
+Transaction amount set to $-200.00
+Another Transaction (Y/N)? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/3/2003	Payment amount: $-200.00
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $0.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+-----------------
+Id ,Name: 24242, Mazen
+Account Date:  September 3, 2000
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (302)020-1020
+Service Type: DSL	Daily Rate: $2.50
+installation Fee: $20.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $108.50
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $-115.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 8
+Add transactions
+Please enter the type of transaction:
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type : 0
+Enter the first few characters of the customer's name: P S
+Name: Sam Mantic	ID: 98989? y
+Enter the transaction date. 
+Year: 2000
+Month (a number from 1 to 12): 3
+Day of the month: 2
+The Transaction date cannot be earlier than 4/1/2001
+Year: 2000
+Month (a number from 1 to 12): 4
+Day of the month: 3
+The Transaction date cannot be earlier than 4/1/2001
+Year: 2003
+Month (a number from 1 to 12): 2
+Day of the month: 2
+Usage fee for the period 4/1/2001 - 5/1/2001: $9.00
+Another Transaction (Y/N)? n y
+Please enter the type of transaction:
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type : 1
+Enter the first few characters of the customer's name: Z S
+Name: Sam Mantic	ID: 98989? y n
+not found
+Enter the first few characters of the customer's name: S
+Name: Sam Mantic	ID: 98989? y
+Enter the transaction date. 
+Year: 2003
+Month (a number from 1 to 12): 2
+Day of the month: 6
+Enter the charge for this extra service: 200
+Charge must be between $25and $100.please try again.
+50
+Enter the date of this extra service: Year: 2000
+Month (a number from 1 to 12): 3
+Day of the month: 2
+The Service date cannot be earlier than 4/1/2001
+Year: 2003
+Month (a number from 1 to 12): 4
+Day of the month: 5
+Enter a brief description of the service:good service
+Another Transaction (Y/N)? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $0.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+-----------------
+Id ,Name: 24242, Mazen
+Account Date:  September 3, 2000
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (302)020-1020
+Service Type: DSL	Daily Rate: $2.50
+installation Fee: $20.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $108.50
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $-56.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 10
+Edit transactions
+Enter the first few characters of the customer's name: S
+Name: Sam Mantic	ID: 98989? n y
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+Edit this Transaction (y/n)? n
+98989	2/3/2003	Payment amount: $-200.00
+Edit this Transaction (y/n)? y
+Transaction Date: 2/3/2003	::Change(y/n)?n y
+Enter the transaction date. 
+Year: 2003
+Month (a number from 1 to 12): 2
+Day of the month: 2
+Customer Id: 98989	::Change(y/n)?y
+Enter the first few characters of the customer's name: M
+Name: Maan Haj	ID: 20000? y
+Transaction payment: -200.00	change?(Y/N) 
+y
+Enter the payment amount: 100
+Transaction amount set to $-100.00
+*** Transaction has been associated with a different custID.
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+Edit this Transaction (y/n)? n
+98989	2/2/2003	Monthly Use Charge	$9.00
+Usage fee for period 4/1/2001 - 5/1/2001: $9.00
+Edit this Transaction (y/n)? n
+98989	2/6/2003	Extra Service Fee	$50.00
+Service Date: 4/5/2003
+Service Description: good service
+Edit this Transaction (y/n)? n n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2 10
+Edit transactions
+Enter the first few characters of the customer's name: o
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	2/2/2003	Payment amount: $-100.00
+----------------------
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/2/2003	Monthly Use Charge	$9.00
+Usage fee for period 4/1/2001 - 5/1/2001: $9.00
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/6/2003	Extra Service Fee	$50.00
+Service Date: 4/5/2003
+Service Description: good service
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  June 12, 2000
+Account Balance: $-100.00
+Address:  54 Mountain ave #16; Malden; Ma; 23; 02134
+Phone: (203)020-2010
+Service Type: Dialup	Daily Rate: $2.00
+Web space Limit: 3 MB
+-----------------
+Id ,Name: 24242, Mazen
+Account Date:  September 3, 2000
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (302)020-1020
+Service Type: DSL	Daily Rate: $2.50
+installation Fee: $20.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $108.50
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $144.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 8
+Add transactions
+Please enter the type of transaction:
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type : 0
+Enter the first few characters of the customer's name: M
+Name: Maan Haj	ID: 20000? y
+Enter the transaction date. 
+Year: 2003
+Month (a number from 1 to 12): 8
+Day of the month: 16
+Usage fee for the period 6/12/2000 - 7/12/2000: $60.00
+Another Transaction (Y/N)? y
+Please enter the type of transaction:
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type : 0
+Enter the first few characters of the customer's name: P M
+Name: Maan Haj	ID: 20000? y
+Enter the transaction date. 
+Year: 2003
+Month (a number from 1 to 12): 4
+Day of the month: 5
+Usage fee for the period 7/13/2000 - 8/13/2000: $62.00
+Another Transaction (Y/N)? y
+Please enter the type of transaction:
+0	Monthly Use Charge
+1	Extra Service Fee
+2	Late Fee
+3	Payment
+Enter Transaction Type : 0
+Enter the first few characters of the customer's name: M
+Name: Maan Haj	ID: 20000? y
+Enter the transaction date. 
+Year: 2000
+Month (a number from 1 to 12): 3
+Day of the month: 2
+The Transaction date cannot be earlier than 6/12/2000
+Year: 2006
+Month (a number from 1 to 12): 3
+Day of the month: 4
+Usage fee for the period 8/14/2000 - 9/14/2000: $62.00
+Another Transaction (Y/N)? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 10
+Edit transactions
+Enter the first few characters of the customer's name: S
+Name: Sam Mantic	ID: 98989? y
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+Edit this Transaction (y/n)? y
+Transaction Date: 6/1/2001	::Change(y/n)?n
+Customer Id: 98989	::Change(y/n)?y
+Enter the first few characters of the customer's name: M
+Name: Maan Haj	ID: 20000? n
+Name: Mazen	ID: 24242? y
+Service Date: 5/11/2001	::Change(y/n)? y
+Enter the date of this extra service: Year: 2003
+Month (a number from 1 to 12): 2
+Day of the month: 1
+Service Description: replace broken modem	::Change(y/n)? n
+Transaction Amount :85.00	::changed?(Y/N) y
+Enter the charge for this extra service: 200
+Charge must be between $25and $100.please try again.
+100
+*** Transaction has been associated with a different custID.
+98989	2/2/2003	Monthly Use Charge	$9.00
+Usage fee for period 4/1/2001 - 5/1/2001: $9.00
+Edit this Transaction (y/n)? n
+98989	2/6/2003	Extra Service Fee	$50.00
+Service Date: 4/5/2003
+Service Description: good service
+Edit this Transaction (y/n)? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 0
+Read Customer List
+Name of the file to be read:  clf   clf
+Reading file clf ...
+*** There are already 4 Customers in the list.
+Do you want to keep the old data in the Customer list? y
+The customer with ID 24242 found.
+Stan Template	  2/1/2001
+Ok to replace(Y/N)? n
+The customer with ID 48484 found.
+Parsley Error	  3/1/2001
+Ok to replace(Y/N)? n
+The customer with ID 98989 found.
+Sam Mantic	  4/1/2001
+Ok to replace(Y/N)? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 5
+Remove Customer
+Enter the first few characters of the customer's name:M
+Name: Maan Haj	ID: 20000? y
+*** This Customer has transactions on file which must
+*** all be removed before the Customer can be removed.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 5
+Remove Customer
+Enter the first few characters of the customer's name:M
+Name: Maan Haj	ID: 20000? n
+Name: Mazen	ID: 24242? y
+*** This Customer has transactions on file which must
+*** all be removed before the Customer can be removed.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 4 5
+Remove Customer
+Enter the first few characters of the customer's name:S
+Name: Sam Mantic	ID: 98989? y
+*** This Customer has transactions on file which must
+*** all be removed before the Customer can be removed.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 5
+Remove Customer
+Enter the first few characters of the customer's name:P
+Name: Polly Morphism	ID: 13131? y
+Id ,Name: 13131, Polly Morphism
+Account Date:  January 1, 2001
+Account Balance: $0.00
+Address:  111 First Street; Apt 4; Pleasantville; MI; 38383
+Phone: (123)234-3456
+Service Type: DSL	Daily Rate: $0.80
+installation Fee: $100.00
+Number of fixed IP addresses: 10
+Are you sure that you want to remove this Customer (y/n)? n y
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 11
+Remove Transactions
+Enter the first few characters of the customer's name: M
+Name: Maan Haj	ID: 20000? n
+Name: Mazen	ID: 24242? y
+24242	6/1/2001	Extra Service Fee	$100.00
+Service Date: 2/1/2003
+Service Description: replace broken modem
+Delete this transaction(Y/N)? y
+Another deletion(Y/N)?  y
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	2/2/2003	Payment amount: $-100.00
+----------------------
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	8/16/2003	Monthly Use Charge	$60.00
+Usage fee for period 6/12/2000 - 7/12/2000: $60.00
+----------------------
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	4/5/2003	Monthly Use Charge	$62.00
+Usage fee for period 7/13/2000 - 8/13/2000: $62.00
+----------------------
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	3/4/2006	Monthly Use Charge	$62.00
+Usage fee for period 8/14/2000 - 9/14/2000: $62.00
+----------------------
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/2/2003	Monthly Use Charge	$9.00
+Usage fee for period 4/1/2001 - 5/1/2001: $9.00
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/6/2003	Extra Service Fee	$50.00
+Service Date: 4/5/2003
+Service Description: good service
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 5
+Remove Customer
+Enter the first few characters of the customer's name:M
+Name: Maan Haj	ID: 20000? n
+Name: Mazen	ID: 24242? y
+Id ,Name: 24242, Mazen
+Account Date:  September 3, 2000
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (302)020-1020
+Service Type: DSL	Daily Rate: $2.50
+installation Fee: $20.00
+Number of fixed IP addresses: 10
+Are you sure that you want to remove this Customer (y/n)? y
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 11
+Remove Transactions
+Enter the first few characters of the customer's name: M
+Name: Maan Haj	ID: 20000? y
+20000	2/2/2003	Payment amount: $-100.00
+Delete this transaction(Y/N)? y
+Another deletion(Y/N)?  n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	8/16/2003	Monthly Use Charge	$60.00
+Usage fee for period 6/12/2000 - 7/12/2000: $60.00
+----------------------
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	4/5/2003	Monthly Use Charge	$62.00
+Usage fee for period 7/13/2000 - 8/13/2000: $62.00
+----------------------
+Id ,Name: 20000, Maan Haj
+Account Date:  6/12/2000
+20000	3/4/2006	Monthly Use Charge	$62.00
+Usage fee for period 8/14/2000 - 9/14/2000: $62.00
+----------------------
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/2/2003	Monthly Use Charge	$9.00
+Usage fee for period 4/1/2001 - 5/1/2001: $9.00
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	2/6/2003	Extra Service Fee	$50.00
+Service Date: 4/5/2003
+Service Description: good service
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 13
+Customer List may have been changed.
+Transaction List may have been changed.
+Do you want to quit without saving(y/n)? n
+Returning to menu.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 6
+Write Customer List
+Please enter the file name for saving this data: zzz
+File already exists ... Ok to overwrite (y/n)? 
+y
+Writing to file zzz ...
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 13
+Transaction List may have been changed.
+Do you want to quit without saving(y/n)? n
+Returning to menu.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 12
+Write Transaction List
+Please enter the file name for saving this data: zzz1
+File already exists ... Ok to overwrite (y/n)? 
+y
+Writing to file zzz1 ...
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 13  7
+Read Transaction List
+Name of the file to be read:  tlf
+Reading file tlf ...
+Do you want to keep old data? n
+20000 has no Transactions.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 0
+Read Customer List
+Name of the file to be read:  clf
+Reading file clf ...
+*** There are already 3 Customers in the list.
+Do you want to keep the old data in the Customer list? n
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 8 7
+Read Transaction List
+Name of the file to be read:  tlf
+Reading file tlf ...
+Do you want to keep old data? y
+24242 has no Transactions.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? n
+Enter customer ID (or "All") All
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	7/1/2001	Late Fee	$25.00
+Due Date: 6/15/2001	Late Fee:  $25.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	2/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 1/1/2001 - 2/1/2001: $248.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	3/15/2001	Monthly Use Charge	$224.00
+Usage fee for period 2/2/2001 - 3/2/2001: $224.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	4/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 3/3/2001 - 4/3/2001: $248.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	5/15/2001	Monthly Use Charge	$240.00
+Usage fee for period 4/4/2001 - 5/4/2001: $240.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	6/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 5/5/2001 - 6/5/2001: $248.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	2/20/2001	Payment amount: $-248.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	3/20/2001	Payment amount: $-224.00
+----------------------
+Id ,Name: 13131, Polly Morphism
+Account Date:  1/1/2001
+13131	4/20/2001	Payment amount: $-248.00
+----------------------
+Id ,Name: 48484, Parsley Error
+Account Date:  3/1/2001
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  4/1/2001
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 13131, Polly Morphism
+Account Date:  January 1, 2001
+Account Balance: $513.00
+Address:  111 First Street; Apt 4; Pleasantville; MI; 38383
+Phone: (123)234-3456
+Service Type: DSL	Daily Rate: $0.80
+installation Fee: $100.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 24242, Stan Template
+Account Date:  February 1, 2001
+Account Balance: $0.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (142)536-4759
+Service Type: Dialup	Daily Rate: $0.25
+Web space Limit: 12 MB
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $108.50
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $85.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 10
+Edit transactions
+Enter the first few characters of the customer's name: P
+Name: Polly Morphism	ID: 13131? y
+13131	7/1/2001	Late Fee	$25.00
+Due Date: 6/15/2001	Late Fee:  $25.00
+Edit this Transaction (y/n)? y
+Transaction Date: 7/1/2001	::Change(y/n)?n
+Customer Id: 13131	::Change(y/n)?y
+Enter the first few characters of the customer's name: S
+Name: Stan Template	ID: 24242? y
+Due Date: 6/15/2001	::Change(y/n)? y
+Enter the due date :Year: 2000
+Month (a number from 1 to 12): 3
+Day of the month: 2
+Due date cannot be earlier than 2/1/2001
+Year: 2004
+Month (a number from 1 to 12): 7
+Day of the month: 12
+*** Transaction has been associated with a different custID.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 2
+Display Customers
+Use short display format (Y/N)? n
+Enter Customer ID (or "All") All
+Id ,Name: 13131, Polly Morphism
+Account Date:  January 1, 2001
+Account Balance: $488.00
+Address:  111 First Street; Apt 4; Pleasantville; MI; 38383
+Phone: (123)234-3456
+Service Type: DSL	Daily Rate: $0.80
+installation Fee: $100.00
+Number of fixed IP addresses: 10
+-----------------
+Id ,Name: 24242, Stan Template
+Account Date:  February 1, 2001
+Account Balance: $25.00
+Address:  222 Second Street; Suite 8; Blue Sky; PA; 93939
+Phone: (142)536-4759
+Service Type: Dialup	Daily Rate: $0.25
+Web space Limit: 12 MB
+-----------------
+Id ,Name: 48484, Parsley Error
+Account Date:  March 1, 2001
+Account Balance: $108.50
+Address:  333 Third Street; Flat 4; Greenfield; CT; 74747
+Phone: (728)394-0571
+Service Type: DSL	Daily Rate: $0.70
+installation Fee: $75.00
+Number of fixed IP addresses: 8
+-----------------
+Id ,Name: 98989, Sam Mantic
+Account Date:  April 1, 2001
+Account Balance: $85.00
+Address:  444 Fourth Street; Room 2; Fairhaven; NY; 66333
+Phone: (223)344-5588
+Service Type: Dialup	Daily Rate: $0.30
+Web space Limit: 15 MB
+-----------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? y
+Enter customer ID (or "All") All
+13131	2/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 1/1/2001 - 2/1/2001: $248.00
+----------------------
+13131	3/15/2001	Monthly Use Charge	$224.00
+Usage fee for period 2/2/2001 - 3/2/2001: $224.00
+----------------------
+13131	4/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 3/3/2001 - 4/3/2001: $248.00
+----------------------
+13131	5/15/2001	Monthly Use Charge	$240.00
+Usage fee for period 4/4/2001 - 5/4/2001: $240.00
+----------------------
+13131	6/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 5/5/2001 - 6/5/2001: $248.00
+----------------------
+13131	2/20/2001	Payment amount: $-248.00
+----------------------
+13131	3/20/2001	Payment amount: $-224.00
+----------------------
+13131	4/20/2001	Payment amount: $-248.00
+----------------------
+24242	7/1/2001	Late Fee	$25.00
+Due Date: 7/12/2004	Late Fee:  $25.00
+----------------------
+48484	4/15/2001	Monthly Use Charge	$108.50
+Usage fee for period 3/1/2001 - 4/1/2001: $108.50
+----------------------
+98989	6/1/2001	Extra Service Fee	$85.00
+Service Date: 5/11/2001
+Service Description: replace broken modem
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? y
+Enter customer ID (or "All") 24242
+24242	7/1/2001	Late Fee	$25.00
+Due Date: 7/12/2004	Late Fee:  $25.00
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 9
+Display transactions
+Use short display format (y/n)? y
+Enter customer ID (or "All") 13131
+13131	2/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 1/1/2001 - 2/1/2001: $248.00
+----------------------
+13131	3/15/2001	Monthly Use Charge	$224.00
+Usage fee for period 2/2/2001 - 3/2/2001: $224.00
+----------------------
+13131	4/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 3/3/2001 - 4/3/2001: $248.00
+----------------------
+13131	5/15/2001	Monthly Use Charge	$240.00
+Usage fee for period 4/4/2001 - 5/4/2001: $240.00
+----------------------
+13131	6/15/2001	Monthly Use Charge	$248.00
+Usage fee for period 5/5/2001 - 6/5/2001: $248.00
+----------------------
+13131	2/20/2001	Payment amount: $-248.00
+----------------------
+13131	3/20/2001	Payment amount: $-224.00
+----------------------
+13131	4/20/2001	Payment amount: $-248.00
+----------------------
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 13
+Transaction List may have been changed.
+Do you want to quit without saving(y/n)? n
+Returning to menu.
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 12
+Write Transaction List
+Please enter the file name for saving this data: zzz1
+File already exists ... Ok to overwrite (y/n)? 
+y
+Writing to file zzz1 ...
+		(0)	Read Customer List
+		(1)	Add Customers
+		(2)	Display Customers
+		(3)	Find Customer
+		(4)	Edit Customer
+		(5)	Remove Customer
+		(6)	Write Customer List
+		(7)	Read Transaction List
+		(8)	Add Transactions
+		(9)	Display Transactions
+		(10)	Edit Transaction
+		(11)	Remove Transaction
+		(12)	Write Transaction List
+		(13)	Quit
+			Your choice: 13
+[haj@f431-02 cfiles]$ exit    cat zzz
+3
+20000
+Maan Haj
+54 Mountain ave #16; Malden; Ma; 23; 02134
+(203)020-2010
+365406
+0
+2
+3
+48484
+Parsley Error
+333 Third Street; Flat 4; Greenfield; CT; 74747
+(728)394-0571
+365668
+1
+0.7
+75
+8
+98989
+Sam Mantic
+444 Fourth Street; Room 2; Fairhaven; NY; 66333
+(223)344-5588
+365699
+0
+0.3
+15
+[haj@f431-02 cfiles]$ cat zzz1
+11
+0
+13131
+365654
+248
+365609
+365640
+0
+13131
+365682
+224
+365641
+365669
+0
+13131
+365713
+248
+365670
+365701
+0
+13131
+365743
+240
+365702
+365732
+0
+13131
+365774
+248
+365733
+365764
+3
+13131
+365659
+-248
+3
+13131
+365687
+-224
+3
+13131
+365718
+-248
+2
+24242
+365790
+25
+366897
+0
+48484
+365713
+108.5
+365668
+365699
+1
+98989
+365760
+85
+365739
+replace broken modem
+[haj@f431-02 cfiles]$ exit
+exit
+
+Script done on Tue Dec 11 01:58:59 2001
